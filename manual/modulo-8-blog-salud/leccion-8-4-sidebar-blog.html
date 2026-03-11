@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lección 8.4: Sidebar del Blog</title>
+    <link rel="stylesheet" href="../micss/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
+</head>
+<body>
+<div class="leccion-contenedor">
+<article>
+
+<h1 class="leccion-titulo">Lección 8.4: Sidebar del Blog</h1>
+<h2>Componente Blade con buscador, categorías, recientes, newsletter y populares</h2>
+
+<!-- Analogía -->
+<div class="analogia-caja">
+    <strong>🎯 Piensa en esto:</strong> Imagina el índice de un libro: te permite buscar temas específicos, ver los capítulos organizados por categorías, y descubrir contenido relacionado. El sidebar es exactamente eso: una guía de navegación que ayuda a los lectores a encontrar más contenido de su interés.
+</div>
+
+<!-- Paso 1 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">1</span>
+    <strong>Crear el componente y consultar datos</strong>
+    <p>Primero obtenemos los datos que vamos a mostrar: artículos recientes y categorías con artículos.</p>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/components/blog-sidebar.blade.php</code></p>
+    <pre><code class="language-php">@php
+use App\Models\Articulo;
+use App\Models\Categoria;
+
+$recientes = Articulo::publicados()
+    ->recientes()
+    ->limit(5)
+    ->get();
+
+$categorias = Categoria::conArticulosPublicados()
+    ->ordenadas()
+    ->get();
+@endphp</code></pre>
+    <p style="color: #6b7280;">💡 Los scopes <code>publicados()</code>, <code>recientes()</code> y <code>ordenadas()</code> filtran y ordenan los datos automáticamente.</p>
+</div>
+
+<!-- Micro-código destacado -->
+<div class="micro-codigo-destacado">
+    <h4>📝 ESTE ES EL CÓDIGO QUE VAMOS A APRENDER:</h4>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/components/blog-sidebar.blade.php</code></p>
+    <pre><code class="language-php">&lt;ul class="space-y-2"&gt;
+    @foreach($categorias as $categoria)
+        &lt;li&gt;
+            &lt;a href="{{ route('blog.categoria', $categoria->slug) }}"&gt;
+                &lt;span 
+                    class="w-3 h-3 rounded-full"
+                    style="background-color: {{ $categoria->color }}"
+                &gt;&lt;/span&gt;
+                &lt;span&gt;{{ $categoria->nombre }}&lt;/span&gt;
+                &lt;span&gt;
+                    {{ $categoria->articulos()->publicados()->count() }}
+                &lt;/span&gt;
+            &lt;/a&gt;
+        &lt;/li&gt;
+    @endforeach
+&lt;/ul&gt;</code></pre>
+</div>
+
+<!-- Explicación línea por línea -->
+<h4>🔍 Vamos a entender línea por línea (como si fuera la primera vez):</h4>
+
+<div class="linea-explicacion">
+    <code>style="background-color: {{ $categoria->color }}"</code> 
+    <br>→ Usamos el color guardado en la base de datos para crear un círculo identificador visual. Cada categoría tiene su propio color.
+</div>
+
+<div class="linea-explicacion">
+    <code>route('blog.categoria', $categoria->slug)</code> 
+    <br>→ Generamos la URL usando el slug (URL amigable) de la categoría. Es más bonito y SEO-friendly que usar el ID.
+</div>
+
+<div class="linea-explicacion">
+    <code>$categoria->articulos()->publicados()->count()</code> 
+    <br>→ Contamos cuántos artículos publicados tiene cada categoría. El número aparece como un badge al lado del nombre.
+</div>
+
+<!-- Paso 2 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">2</span>
+    <strong>El buscador con formulario</strong>
+    <p>Un campo de búsqueda simple que envía el término a una ruta específica.</p>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/components/blog-sidebar.blade.php</code></p>
+    <pre><code class="language-html">&lt;form action="{{ route('blog.buscar') }}" method="GET"&gt;
+    &lt;input 
+        type="text" 
+        name="q"
+        placeholder="Buscar artículos..."
+        class="w-full pl-10 pr-4 py-3 border rounded-lg"
+    &gt;
+    &lt;button type="submit"&gt;Buscar&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+    <p style="color: #6b7280;">💡 El parámetro <code>name="q"</code> es estándar para búsquedas. La URL resultante será <code>/blog/buscar?q=nutricion</code>.</p>
+</div>
+
+<!-- Paso 3 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">3</span>
+    <strong>Artículos recientes con miniatura</strong>
+    <p>Mostramos los últimos 5 artículos con su imagen pequeña y título.</p>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/components/blog-sidebar.blade.php</code></p>
+    <pre><code class="language-html">@foreach($recientes as $articulo)
+    &lt;li class="flex gap-3"&gt;
+        @if($articulo->imagen_destacada)
+            &lt;img src="{{ asset('storage/' . $articulo->imagen_destacada) }}" 
+                 class="w-16 h-16 object-cover rounded-lg"&gt;
+        @else
+            &lt;div class="w-16 h-16 bg-gray-100 rounded-lg"&gt;
+                &lt;!-- Icono por defecto --&gt;
+            &lt;/div&gt;
+        @endif
+        &lt;div&gt;
+            &lt;a href="{{ $articulo->url }}"&gt;{{ $articulo->titulo }}&lt;/a&gt;
+            &lt;p&gt;{{ $articulo->fecha_publicacion->format('d M, Y') }}&lt;/p&gt;
+        &lt;/div&gt;
+    &lt;/li&gt;
+@endforeach</code></pre>
+    <p style="color: #6b7280;">💡 El <code>@if</code> muestra la imagen si existe, o un placeholder si no tiene.</p>
+</div>
+
+<!-- Paso 4 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">4</span>
+    <strong>Formulario de Newsletter</strong>
+    <p>Un formulario simple para capturar emails de suscriptores.</p>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/components/blog-sidebar.blade.php</code></p>
+    <pre><code class="language-html">&lt;form action="{{ route('newsletter.suscribir') }}" method="POST"&gt;
+    @csrf
+    &lt;input type="email" name="email" placeholder="tu@email.com" required&gt;
+    &lt;button type="submit"&gt;Suscribirme&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+    <p style="color: #6b7280;">💡 <code>@csrf</code> es obligatorio en formularios POST de Laravel. Protege contra ataques de falsificación.</p>
+</div>
+
+<!-- Código completo colapsible -->
+<details class="codigo-completo">
+    <summary>📁 ¿Quieres ver el código completo del sidebar? (opcional)</summary>
+    <p style="color: #6b7280;">Esto es solo para que veas dónde va tu código. No necesitas memorizar todo esto:</p>
+    <pre><code class="language-php">&lt;!-- Sidebar del Blog --&gt;
+@php
+use App\Models\Articulo;
+use App\Models\Categoria;
+
+$recientes = Articulo::publicados()->recientes()->limit(5)->get();
+$categorias = Categoria::conArticulosPublicados()->ordenadas()->get();
+@endphp
+
+&lt;aside class="space-y-8"&gt;
+    
+    &lt;!-- Buscador --&gt;
+    &lt;div class="bg-white rounded-xl shadow-md p-6"&gt;
+        &lt;h3&gt;Buscar&lt;/h3&gt;
+        &lt;form action="{{ route('blog.buscar') }}" method="GET"&gt;
+            &lt;input type="text" name="q" placeholder="Buscar..."&gt;
+            &lt;button&gt;Buscar&lt;/button&gt;
+        &lt;/form&gt;
+    &lt;/div&gt;
+
+    &lt;!-- Categorías --&gt;
+    &lt;div class="bg-white rounded-xl shadow-md p-6"&gt;
+        &lt;h3&gt;Categorías&lt;/h3&gt;
+        &lt;ul&gt;
+            @foreach($categorias as $categoria)
+                &lt;li&gt;
+                    &lt;a href="{{ route('blog.categoria', $categoria->slug) }}"&gt;
+                        &lt;span style="background: {{ $categoria->color }}"&gt;&lt;/span&gt;
+                        {{ $categoria->nombre }}
+                        &lt;span&gt;{{ $categoria->articulos()->publicados()->count() }}&lt;/span&gt;
+                    &lt;/a&gt;
+                &lt;/li&gt;
+            @endforeach
+        &lt;/ul&gt;
+    &lt;/div&gt;
+
+    &lt;!-- Recientes --&gt;
+    &lt;div class="bg-white rounded-xl shadow-md p-6"&gt;
+        &lt;h3&gt;Recientes&lt;/h3&gt;
+        &lt;ul&gt;
+            @foreach($recientes as $articulo)
+                &lt;li&gt;
+                    &lt;img src="{{ asset('storage/' . $articulo->imagen_destacada) }}"&gt;
+                    &lt;a href="{{ $articulo->url }}"&gt;{{ $articulo->titulo }}&lt;/a&gt;
+                &lt;/li&gt;
+            @endforeach
+        &lt;/ul&gt;
+    &lt;/div&gt;
+
+    &lt;!-- Newsletter --&gt;
+    &lt;div class="bg-gradient-to-br from-medico-azul-500 to-medico-azul-600 rounded-xl p-6 text-white"&gt;
+        &lt;h3&gt;Newsletter&lt;/h3&gt;
+        &lt;form action="{{ route('newsletter.suscribir') }}" method="POST"&gt;
+            @csrf
+            &lt;input type="email" name="email" placeholder="tu@email.com"&gt;
+            &lt;button&gt;Suscribirme&lt;/button&gt;
+        &lt;/form&gt;
+    &lt;/div&gt;
+&lt;/aside&gt;</code></pre>
+</details>
+
+<!-- Resumen -->
+<div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 0.5rem; padding: 1.5rem;">
+    <h4 style="color: #1e40af;">🎉 ¿Qué aprendimos hoy?</h4>
+    <ul>
+        <li>El sidebar consulta datos de la base de datos usando scopes del modelo</li>
+        <li>Las categorías muestran su color identificador y conteo de artículos</li>
+        <li>El buscador usa GET para que la URL sea compartible y bookmarkable</li>
+        <li>Los artículos recientes muestran miniatura o placeholder alternativo</li>
+        <li>El formulario de newsletter usa <code>@csrf</code> para seguridad</li>
+    </ul>
+</div>
+
+<p style="font-size: 1.1rem;">¡Tu sidebar está completo! Solo nos falta la paginación para cuando haya muchos artículos. ¡Nos vemos en la última lección! 📑</p>
+
+</article>
+</div>
+</body>
+</html>

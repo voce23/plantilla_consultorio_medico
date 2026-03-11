@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lección 9.2: Google Maps Embebido</title>
+    <link rel="stylesheet" href="../micss/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
+</head>
+<body>
+<div class="leccion-contenedor">
+<article>
+
+<h1 class="leccion-titulo">Lección 9.2: Google Maps Embebido</h1>
+<h2>Iframe + sección "Cómo llegar" con iconos SVG</h2>
+
+<!-- Analogía -->
+<div class="analogia-caja">
+    <strong>🎯 Piensa en esto:</strong> Imagina que tienes una tienda física. Los clientes necesitan saber dónde estás, cómo llegar en auto o transporte público, y dónde pueden estacionar. En el mundo digital, el mapa embebido cumple esa función: muestra tu ubicación exacta y permite a los pacientes planificar su visita.
+</div>
+
+<!-- Paso 1 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">1</span>
+    <strong>Obtener el código de Google Maps</strong>
+    <p>Ve a Google Maps, busca tu ubicación, haz clic en "Compartir" y luego "Incorporar un mapa".</p>
+    <p><strong>📍 Google Maps:</strong></p>
+    <pre><code class="language-text">1. Abre Google Maps
+2. Busca tu dirección
+3. Haz clic en "Compartir"
+4. Selecciona "Incorporar un mapa"
+5. Copia el código iframe</code></pre>
+    <p style="color: #6b7280;">💡 El código incluye una URL larga que es el <code>src</code> del iframe.</p>
+</div>
+
+<!-- Micro-código destacado -->
+<div class="micro-codigo-destacado">
+    <h4>📝 ESTE ES EL CÓDIGO QUE VAMOS A APRENDER:</h4>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/components/seccion-mapa.blade.php</code></p>
+    <pre><code class="language-html">&lt;iframe
+    src="{{ $googleMapsUrl }}"
+    width="100%"
+    height="100%"
+    style="border:0; min-height: 100%;"
+    allowfullscreen=""
+    loading="lazy"
+    referrerpolicy="no-referrer-when-downgrade"
+    title="Ubicación de Clínica Salud"
+    class="w-full h-full"
+&gt;&lt;/iframe&gt;</code></pre>
+</div>
+
+<!-- Explicación línea por línea -->
+<h4>🔍 Vamos a entender línea por línea (como si fuera la primera vez):</h4>
+
+<div class="linea-explicacion">
+    <code>src="{{ $googleMapsUrl }}"</code> 
+    <br>→ La URL del mapa viene de una propiedad del componente. Así puedes reutilizar el componente con diferentes ubicaciones.
+</div>
+
+<div class="linea-explicacion">
+    <code>loading="lazy"</code> 
+    <br>→ El mapa solo se carga cuando el usuario hace scroll hasta él. Mejora el rendimiento de la página.
+</div>
+
+<div class="linea-explicacion">
+    <code>referrerpolicy="no-referrer-when-downgrade"</code> 
+    <br>→ Medida de seguridad que controla qué información se envía a Google cuando se carga el mapa.
+</div>
+
+<div class="linea-explicacion">
+    <code>allowfullscreen=""</code> 
+    <br>→ Permite al usuario expandir el mapa a pantalla completa para ver mejor los detalles.
+</div>
+
+<!-- Paso 2 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">2</span>
+    <strong>Crear el componente con información de contacto</strong>
+    <p>El mapa va acompañado de tarjetas con dirección, teléfono, email e instrucciones.</p>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/components/seccion-mapa.blade.php</code></p>
+    <pre><code class="language-php">@props([
+    'titulo' => '¿Cómo llegar?',
+    'direccion' => 'Av. Salud 123...',
+    'telefono' => '+52 123 456 7890',
+    'email' => 'contacto@clinica.com',
+    'instrucciones' => [],
+])</code></pre>
+    <p style="color: #6b7280;">💡 Las props permiten personalizar el componente cada vez que lo uses.</p>
+</div>
+
+<!-- Paso 3 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">3</span>
+    <strong>Link para obtener direcciones</strong>
+    <p>Un botón que abre Google Maps con la ruta desde la ubicación del usuario.</p>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/components/seccion-mapa.blade.php</code></p>
+    <pre><code class="language-html">&lt;a href="https://www.google.com/maps/dir/?api=1&destination={{ urlencode($direccion) }}"&gt;
+    Obtener direcciones
+&lt;/a&gt;</code></pre>
+    <p style="color: #6b7280;">💡 El parámetro <code>api=1</code> activa el modo direcciones y <code>destination</code> indica el destino.</p>
+</div>
+
+<!-- Paso 4 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">4</span>
+    <strong>Usar el componente en cualquier página</strong>
+    <p>Es tan fácil como incluir el componente con los datos que quieras.</p>
+    <p><strong>📍 Archivo:</strong> Cualquier vista Blade</p>
+    <pre><code class="language-html">&lt;x-seccion-mapa 
+    titulo="Visítanos"
+    direccion="Av. Principal 456, Ciudad"
+    telefono="+52 987 654 3210"
+    :instrucciones="[
+        'Estamos frente al parque central',
+        'Estacionamiento gratuito disponible',
+    ]"
+/&gt;</code></pre>
+    <p style="color: #6b7280;">💡 Fíjate los dos puntos antes de <code>:instrucciones</code> porque es un array PHP.</p>
+</div>
+
+<!-- Resumen -->
+<div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 0.5rem; padding: 1.5rem;">
+    <h4 style="color: #1e40af;">🎉 ¿Qué aprendimos hoy?</h4>
+    <ul>
+        <li>Google Maps se embebe con un <code>iframe</code> y una URL especial</li>
+        <li><code>loading="lazy"</code> mejora el rendimiento cargando solo al hacer scroll</li>
+        <li>Las props del componente permiten reutilizarlo con diferentes ubicaciones</li>
+        <li>El link de direcciones abre Google Maps con la ruta automática</li>
+        <li>Las instrucciones personalizadas ayudan a los pacientes a llegar sin problemas</li>
+    </ul>
+</div>
+
+<p style="font-size: 1.1rem;">¡El mapa está listo! Ahora vamos a crear los iconos de redes sociales con colores de hover. ¡Nos vemos en la siguiente! 📍</p>
+
+</article>
+</div>
+</body>
+</html>

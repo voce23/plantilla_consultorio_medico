@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lección 10.3: Performance</title>
+    <link rel="stylesheet" href="../micss/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
+</head>
+<body>
+<div class="leccion-contenedor">
+<article>
+
+<h1 class="leccion-titulo">Lección 10.3: Performance</h1>
+<h2>Lazy loading imágenes, defer scripts, preconnect fonts</h2>
+
+<!-- Analogía -->
+<div class="analogia-caja">
+    <strong>🎯 Piensa en esto:</strong> Imagina que pides comida a domicilio. No es eficiente que el repartidor te traiga todo el restaurante junto. Lo ideal es que traiga primero lo que vas a comer de inmediato, y el postre después. La optimización de performance funciona igual: cargamos primero lo que el usuario necesita ver ahora, y lo demás lo dejamos para después.
+</div>
+
+<!-- Paso 1 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">1</span>
+    <strong>Preconnect: conectarse antes de pedir</strong>
+    <p>Le dice al navegador que establezca la conexión con servidores externos desde el inicio:</p>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/layouts/app.blade.php</code></p>
+    <pre><code class="language-html">&lt;head&gt;
+    {{-- Preconnect para Google Fonts (performance crítica) --}}
+    &lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;
+    &lt;link rel="preconnect" href="https://fonts.gstatic.com" crossorigin&gt;
+    
+    {{-- DNS prefetch para recursos menos críticos --}}
+    &lt;link rel="dns-prefetch" href="https://fonts.googleapis.com"&gt;
+    &lt;link rel="dns-prefetch" href="https://www.google-analytics.com"&gt;
+    
+    {{-- Ahora sí cargar la fuente --}}
+    &lt;link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" 
+          rel="stylesheet"&gt;
+&lt;/head&gt;</code></pre>
+    <p style="color: #6b7280;">💡 <code>preconnect</code> establece la conexión TCP+DNS antes de necesitarla. Puede ahorrar 100-300ms.</p>
+</div>
+
+<!-- Micro-código destacado -->
+<div class="micro-codigo-destacado">
+    <h4>📝 ESTE ES EL CÓDIGO QUE VAMOS A APRENDER:</h4>
+    <p><strong>📍 Archivo:</strong> Cualquier vista Blade con imágenes</p>
+    <pre><code class="language-html">&lt;!-- Imagen con lazy loading nativo --&gt;
+&lt;img 
+    src="{{ asset('images/doctor.jpg') }}"
+    alt="Dr. García - Cardiólogo"
+    loading="lazy"
+    decoding="async"
+    class="w-full h-48 object-cover"
+&gt;
+
+&lt;!-- Primera imagen (hero): carga inmediata con prioridad alta --&gt;
+&lt;img 
+    src="{{ asset('images/hero.jpg') }}"
+    alt="Clínica Salud - Atención de calidad"
+    loading="eager"
+    fetchpriority="high"
+    class="w-full object-cover"
+&gt;</code></pre>
+</div>
+
+<!-- Explicación línea por línea -->
+<h4>🔍 Vamos a entender línea por línea (como si fuera la primera vez):</h4>
+
+<div class="linea-explicacion">
+    <code>loading="lazy"</code> 
+    <br>→ El navegador solo descarga la imagen cuando está a punto de entrar al viewport. Las imágenes fuera de pantalla se saltan hasta que el usuario hace scroll.
+</div>
+
+<div class="linea-explicacion">
+    <code>decoding="async"</code> 
+    <br>→ El navegador puede decodificar la imagen en segundo plano, sin bloquear la renderización del resto de la página.
+</div>
+
+<div class="linea-explicacion">
+    <code>fetchpriority="high"</code> 
+    <br>→ Indica que esta imagen es crítica (como el hero). El navegador la descarga con máxima prioridad. Solo úsala en la imagen principal.
+</div>
+
+<div class="linea-explicacion">
+    <code>loading="eager"</code> 
+    <br>→ Carga inmediata. Úsala para el hero o imágenes visibles sin hacer scroll. Es el comportamiento por defecto.
+</div>
+
+<!-- Paso 2 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">2</span>
+    <strong>Scripts con defer</strong>
+    <p>Los scripts con <code>defer</code> se descargan en paralelo pero se ejecutan después de que el HTML esté listo:</p>
+    <pre><code class="language-html">&lt;head&gt;
+    {{-- Scripts de análisis con defer (no bloquean la carga) --}}
+    &lt;script defer src="https://analytics.example.com/tracker.js"&gt;&lt;/script&gt;
+    
+    {{-- Scripts externos con async (se ejecutan cuando estén listos) --}}
+    &lt;script async src="https://www.googletagmanager.com/gtag/js"&gt;&lt;/script&gt;
+    
+    {{-- Vite compila automáticamente con module scripts (equivale a defer) --}}
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+&lt;/head&gt;</code></pre>
+    <p style="color: #6b7280;">💡 <code>defer</code>: respeta el orden. <code>async</code>: se ejecuta en cuanto descarga. Vite ya usa module que incluye defer.</p>
+</div>
+
+<!-- Paso 3 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">3</span>
+    <strong>Componente responsive-image de Blade</strong>
+    <p>El componente que creamos genera automáticamente los atributos correctos:</p>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/components/responsive-image.blade.php</code></p>
+    <pre><code class="language-html">&lt;!-- Imagen de doctor con fade-in al cargar --&gt;
+&lt;x-responsive-image 
+    src="{{ asset('storage/' . $doctor->foto) }}"
+    alt="Dr. {{ $doctor->nombre }} - {{ $doctor->especialidad }}"
+    class="w-full h-64 object-cover rounded-xl"
+    loading="lazy"
+/&gt;
+
+&lt;!-- Hero image con prioridad alta --&gt;
+&lt;x-responsive-image 
+    src="{{ asset('images/hero-clinica.jpg') }}"
+    alt="Clínica Salud - Tu salud es nuestra prioridad"
+    class="w-full h-[600px] object-cover"
+    loading="eager"
+    fetchpriority="high"
+/&gt;</code></pre>
+    <p style="color: #6b7280;">💡 El componente añade automáticamente el efecto fade-in cuando la imagen termina de cargar.</p>
+</div>
+
+<!-- Paso 4 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">4</span>
+    <strong>Cachés de Laravel para producción</strong>
+    <p>En producción, Laravel puede cachear rutas, vistas y configuración:</p>
+    <p><strong>📍 Terminal (se ejecuta en el servidor)</strong></p>
+    <pre><code class="language-bash"># Cachear todo para máxima velocidad
+php artisan config:cache   # Agrupa config/*.php en un archivo
+php artisan route:cache    # Precalcula todas las rutas
+php artisan view:cache     # Precompila todas las vistas Blade
+php artisan event:cache    # Cachea los event listeners
+
+# Ver el efecto: antes y después de cachear
+php artisan route:list     # Lista todas las rutas
+
+# Para desarrollo, limpiar cachés
+php artisan optimize:clear</code></pre>
+    <p style="color: #6b7280;">💡 <code>optimize:clear</code> limpia todo. Úsalo cuando hagas cambios en desarrollo y algo no se actualice.</p>
+</div>
+
+<!-- Paso 5 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">5</span>
+    <strong>Query optimization: evitar N+1</strong>
+    <p>Un error común que hace el sitio lento: hacer consultas dentro de un loop:</p>
+    <pre><code class="language-php">// ❌ MALO: N+1 consultas (1 por cada doctor)
+$doctores = Doctor::all();
+@foreach($doctores as $doctor)
+    {{ $doctor->especialidad->nombre }} {{-- Consulta por cada doctor --}}
+@endforeach
+
+// ✅ BUENO: 2 consultas en total con eager loading
+$doctores = Doctor::with('especialidad')->get();
+@foreach($doctores as $doctor)
+    {{ $doctor->especialidad->nombre }} {{-- Ya cargado, 0 consultas extra --}}
+@endforeach</code></pre>
+    <p style="color: #6b7280;">💡 <code>with('relacion')</code> carga la relación en una sola consulta adicional, no una por cada fila.</p>
+</div>
+
+<!-- Paso 6 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">6</span>
+    <strong>Formatos de imagen modernos</strong>
+    <p>Usar WebP reduce el tamaño de las imágenes hasta un 30%:</p>
+    <pre><code class="language-html">&lt;!-- Usar picture para ofrecer WebP con fallback --&gt;
+&lt;picture&gt;
+    &lt;source 
+        srcset="{{ asset('images/doctor.webp') }}" 
+        type="image/webp"&gt;
+    &lt;img 
+        src="{{ asset('images/doctor.jpg') }}" 
+        alt="Dr. García"
+        loading="lazy"
+        class="w-full h-48 object-cover"&gt;
+&lt;/picture&gt;</code></pre>
+    <p style="color: #6b7280;">💡 El navegador usa WebP si lo soporta, y cae al JPG si no. WebP es 25-34% más ligero.</p>
+</div>
+
+<!-- Resumen -->
+<div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 0.5rem; padding: 1.5rem;">
+    <h4 style="color: #1e40af;">🎉 ¿Qué aprendimos hoy?</h4>
+    <ul>
+        <li><code>preconnect</code> establece conexiones anticipadas con servidores externos</li>
+        <li><code>loading="lazy"</code> retrasa imágenes fuera de pantalla</li>
+        <li><code>fetchpriority="high"</code> prioriza la imagen hero</li>
+        <li><code>defer</code> en scripts no bloquea la renderización</li>
+        <li><code>php artisan config:cache</code> optimiza para producción</li>
+        <li><code>with('relacion')</code> evita el problema N+1</li>
+        <li>WebP reduce el peso de las imágenes hasta un 34%</li>
+    </ul>
+</div>
+
+<p style="font-size: 1.1rem;">¡La performance está optimizada! Ahora vamos a posicionar la clínica en Google con SEO. ¡Nos vemos en la siguiente! ⚡</p>
+
+</article>
+</div>
+</body>
+</html>

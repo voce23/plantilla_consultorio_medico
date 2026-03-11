@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>12.1 Reporte de Auditoría del Proyecto</title>
+    <link rel="stylesheet" href="../micss/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+</head>
+<body>
+<div class="leccion-contenedor">
+
+    <div class="leccion-header">
+        <span class="leccion-badge">Lección 12.1</span>
+        <h1>Reporte completo de Auditoría del Proyecto</h1>
+        <p class="leccion-descripcion">6 problemas encontrados y corregidos — con causa, solución y lección aprendida</p>
+    </div>
+
+    <!-- ANALOGIA -->
+    <div class="bloque-analogia">
+        <h2>🔍 La analogía del mecánico</h2>
+        <p>Cuando llevas tu carro al taller para revisión general, el mecánico no espera a que algo truene para revisarlo. <strong>Lo revisa todo de una vez</strong>: frenos, aceite, cables, filtros. Encuentra cosas antes de que sean un problema grave.</p>
+        <p>Eso hicimos aquí: una revisión completa del proyecto para encontrar errores silenciosos, archivos que no se usan, y piezas desconectadas antes de que causen un error en producción.</p>
+    </div>
+
+    <!-- RESUMEN DEL ESTADO -->
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 2rem;">
+        <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">📊 Estado del proyecto antes de la auditoría</h2>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center;">
+            <div style="background: #fef2f2; padding: 1rem; border-radius: 0.5rem;">
+                <div style="font-size: 2rem; font-weight: bold; color: #dc2626;">6</div>
+                <div style="font-size: 0.875rem; color: #6b7280;">Problemas encontrados</div>
+            </div>
+            <div style="background: #f0fdf4; padding: 1rem; border-radius: 0.5rem;">
+                <div style="font-size: 2rem; font-weight: bold; color: #16a34a;">6</div>
+                <div style="font-size: 0.875rem; color: #6b7280;">Correcciones aplicadas</div>
+            </div>
+            <div style="background: #eff6ff; padding: 1rem; border-radius: 0.5rem;">
+                <div style="font-size: 2rem; font-weight: bold; color: #2563eb;">0</div>
+                <div style="font-size: 0.875rem; color: #6b7280;">Problemas pendientes</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ════ PROBLEMA 1 ════ -->
+    <div class="bloque-pasos" style="border-left: 4px solid #dc2626;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+            <span style="background: #dc2626; color: white; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: bold;">Error #1</span>
+            <h2 style="margin: 0;">Scopes faltantes en el modelo Especialidad</h2>
+        </div>
+
+        <table class="tabla-explicacion">
+            <tr><th style="width: 30%;">Tipo</th><td>Error en tiempo de ejecución (Call to undefined method)</td></tr>
+            <tr><th>Archivo</th><td><code>app/Models/Especialidad.php</code></td></tr>
+            <tr><th>Dónde explota</th><td>Cualquier página que tenga el footer — porque <code>footer.blade.php</code> llama a <code>Especialidad::activas()->ordenadas()</code></td></tr>
+        </table>
+
+        <h3 style="margin-top: 1.25rem;">🔴 Código roto</h3>
+        <div class="bloque-codigo">
+            <div class="codigo-header" style="background: #dc2626;">
+                <span class="codigo-archivo">❌ ANTES — footer.blade.php usaba estos scopes que no existían</span>
+            </div>
+            <pre><code class="language-php">// En footer.blade.php se llamaba:
+$especialidades = Especialidad::activas()->ordenadas()->limit(6)->get();
+
+// Pero en Especialidad.php no existía ni activas() ni ordenadas()</code></pre>
+        </div>
+
+        <h3 style="margin-top: 1.25rem;">✅ Corrección aplicada</h3>
+        <div class="bloque-codigo">
+            <div class="codigo-header" style="background: #16a34a;">
+                <span class="codigo-archivo">✅ DESPUÉS — app/Models/Especialidad.php</span>
+            </div>
+            <pre><code class="language-php">/**
+ * Scope: solo especialidades activas
+ */
+public function scopeActivas($query)
+{
+    return $query->where('activo', true);
+}
+
+/**
+ * Scope: ordenar por nombre
+ */
+public function scopeOrdenadas($query)
+{
+    return $query->orderBy('nombre', 'asc');
+}</code></pre>
+        </div>
+        <div style="background: #fefce8; padding: 0.75rem 1rem; border-radius: 0.5rem; margin-top: 0.75rem; font-size: 0.875rem;">
+            <strong>💡 Lección:</strong> Cuando un componente llama a un scope de Eloquent, ese scope DEBE existir en el modelo. Si no existe, el sitio explota en tiempo de ejecución.
+        </div>
+    </div>
+
+    <!-- ════ PROBLEMA 2 ════ -->
+    <div class="bloque-pasos" style="border-left: 4px solid #f59e0b; margin-top: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+            <span style="background: #f59e0b; color: white; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: bold;">Huérfano #1</span>
+            <h2 style="margin: 0;">Archivo huérfano con nombre inválido</h2>
+        </div>
+
+        <table class="tabla-explicacion">
+            <tr><th style="width: 30%;">Tipo</th><td>Archivo huérfano — nadie lo llama, y su nombre tiene un emoji</td></tr>
+            <tr><th>Archivo eliminado</th><td><code>resources/views/components/⚡timeline-trayectoria.blade.php</code></td></tr>
+            <tr><th>Contenido</th><td>Solo tenía el esqueleto vacío generado automáticamente (13 líneas en blanco)</td></tr>
+        </table>
+
+        <div class="bloque-codigo">
+            <div class="codigo-header" style="background: #f59e0b;">
+                <span class="codigo-archivo">🗑️ Archivo eliminado — estaba vacío y con nombre inválido</span>
+            </div>
+            <pre><code class="language-php">&lt;?php
+use Livewire\Component;
+
+new class extends Component
+{
+    //
+};
+?&gt;
+
+&lt;div&gt;
+    {{-- We must ship. - Taylor Otwell --}}
+&lt;/div&gt;</code></pre>
+        </div>
+        <p style="font-size: 0.875rem; margin-top: 0.75rem;">El componente Livewire real está en <code>app/Livewire/TimelineTrayectoria.php</code> y su vista en <code>resources/views/livewire/timeline-trayectoria.blade.php</code> — ambos correctos y completos.</p>
+        <div style="background: #fefce8; padding: 0.75rem 1rem; border-radius: 0.5rem; margin-top: 0.75rem; font-size: 0.875rem;">
+            <strong>💡 Lección:</strong> Los nombres de archivo en Linux/producción son sensibles a mayúsculas y caracteres especiales. Un emoji en el nombre del archivo puede causar errores en deploy.
+        </div>
+    </div>
+
+    <!-- ════ PROBLEMA 3 ════ -->
+    <div class="bloque-pasos" style="border-left: 4px solid #8b5cf6; margin-top: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+            <span style="background: #8b5cf6; color: white; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: bold;">Desconexión #1</span>
+            <h2 style="margin: 0;">Layout usando el footer equivocado</h2>
+        </div>
+
+        <table class="tabla-explicacion">
+            <tr><th style="width: 30%;">Tipo</th><td>Componente equivocado — el trabajo de meses no se mostraba</td></tr>
+            <tr><th>Archivo afectado</th><td><code>resources/views/layouts/app.blade.php</code></td></tr>
+            <tr><th>Impacto</th><td>El footer completo con rutas reales y especialidades dinámicas nunca se renderizaba</td></tr>
+        </table>
+
+        <div class="bloque-codigo">
+            <div class="codigo-header" style="background: #8b5cf6;">
+                <span class="codigo-archivo">📄 resources/views/layouts/app.blade.php — antes y después</span>
+            </div>
+            <pre><code class="language-html">&lt;!-- ❌ ANTES: usaba el footer simple sin rutas ni especialidades --&gt;
+&lt;x-footer-medico /&gt;
+
+&lt;!-- ✅ DESPUÉS: usa el footer completo con rutas reales --&gt;
+&lt;x-footer /&gt;</code></pre>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+            <div style="background: #fef2f2; padding: 1rem; border-radius: 0.5rem; border: 1px solid #fca5a5;">
+                <strong>footer-medico.blade.php</strong>
+                <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem;">Footer simple, links con href="#", sin rutas reales, sin datos dinámicos</p>
+            </div>
+            <div style="background: #f0fdf4; padding: 1rem; border-radius: 0.5rem; border: 1px solid #86efac;">
+                <strong>footer.blade.php</strong>
+                <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem;">Footer completo: 4 columnas, rutas reales, especialidades dinámicas de base de datos, iconos SVG</p>
+            </div>
+        </div>
+        <div style="background: #fefce8; padding: 0.75rem 1rem; border-radius: 0.5rem; margin-top: 0.75rem; font-size: 0.875rem;">
+            <strong>💡 Lección:</strong> Cuando tienes dos archivos con nombres similares, es fácil conectar el equivocado. Revisar el layout principal es parte de la auditoría.
+        </div>
+    </div>
+
+    <!-- ════ PROBLEMA 4 ════ -->
+    <div class="bloque-pasos" style="border-left: 4px solid #dc2626; margin-top: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+            <span style="background: #dc2626; color: white; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: bold;">Error #2</span>
+            <h2 style="margin: 0;">Migración duplicada de la tabla citas</h2>
+        </div>
+
+        <table class="tabla-explicacion">
+            <tr><th style="width: 30%;">Tipo</th><td>Migración duplicada — podría causar error en deploy limpio</td></tr>
+            <tr><th>Archivo eliminado</th><td><code>2026_03_10_204034_create_citas_table.php</code></td></tr>
+            <tr><th>Archivo correcto</th><td><code>2026_03_10_174414_create_citas_table.php</code></td></tr>
+        </table>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+            <div style="background: #fef2f2; padding: 1rem; border-radius: 0.5rem; border: 1px solid #fca5a5;">
+                <strong>❌ La duplicada (eliminada)</strong>
+                <pre style="font-size: 0.8rem; background: #fee2e2; padding: 0.5rem; border-radius: 0.25rem; margin-top: 0.5rem;"><code>Schema::create('citas', function (Blueprint $table) {
+    $table->id();
+    $table->timestamps(); // ← Solo esto!
+});</code></pre>
+            </div>
+            <div style="background: #f0fdf4; padding: 1rem; border-radius: 0.5rem; border: 1px solid #86efac;">
+                <strong>✅ La correcta (conservada)</strong>
+                <pre style="font-size: 0.8rem; background: #dcfce7; padding: 0.5rem; border-radius: 0.25rem; margin-top: 0.5rem;"><code>// Tiene: paciente_id, doctor_id,
+// especialidad_id, servicio_id,
+// fecha, hora, estado, motivo,
+// notas, costo, timestamps</code></pre>
+            </div>
+        </div>
+        <div style="background: #fefce8; padding: 0.75rem 1rem; border-radius: 0.5rem; margin-top: 0.75rem; font-size: 0.875rem;">
+            <strong>💡 Lección:</strong> Dos migraciones que crean la misma tabla causan error "Table already exists" en producción. Siempre revisar que no haya nombres duplicados en la carpeta migrations.
+        </div>
+    </div>
+
+    <!-- ════ PROBLEMA 5 ════ -->
+    <div class="bloque-pasos" style="border-left: 4px solid #dc2626; margin-top: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+            <span style="background: #dc2626; color: white; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: bold;">Error #3</span>
+            <h2 style="margin: 0;">Ruta blog.categoria no registrada</h2>
+        </div>
+
+        <table class="tabla-explicacion">
+            <tr><th style="width: 30%;">Tipo</th><td>RouteNotFoundException al cargar un artículo del blog</td></tr>
+            <tr><th>Quién la llama</th><td><code>resources/views/articulos/show.blade.php</code> — línea 22</td></tr>
+            <tr><th>Corrección</th><td>Ruta agregada en <code>routes/web.php</code></td></tr>
+        </table>
+
+        <div class="bloque-codigo">
+            <div class="codigo-header" style="background: #16a34a;">
+                <span class="codigo-archivo">✅ routes/web.php — ruta agregada</span>
+            </div>
+            <pre><code class="language-php">// Ruta que faltaba — usada en articulos/show.blade.php
+Route::get('/blog/categoria/{categoria}', function (string $categoria) {
+    return view('paginas.blog', ['categoria' => $categoria]);
+})->name('blog.categoria');</code></pre>
+        </div>
+        <div style="background: #fef3c7; border: 1px solid #f59e0b; padding: 0.75rem 1rem; border-radius: 0.5rem; margin-top: 0.75rem; font-size: 0.875rem;">
+            <strong>⚠️ Nota importante:</strong> Esta ruta debe ir ANTES de <code>/blog/{slug}</code> en web.php para que Laravel no confunda "categoria" como un slug. Está posicionada correctamente.
+        </div>
+        <div style="background: #fefce8; padding: 0.75rem 1rem; border-radius: 0.5rem; margin-top: 0.75rem; font-size: 0.875rem;">
+            <strong>💡 Lección:</strong> Siempre que creas una vista que usa <code>route()</code>, verifica que esa ruta exista en web.php. Una forma rápida es ejecutar <code>php artisan route:list</code> y buscar el nombre.
+        </div>
+    </div>
+
+    <!-- ════ PROBLEMA 6 ════ -->
+    <div class="bloque-pasos" style="border-left: 4px solid #f59e0b; margin-top: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+            <span style="background: #f59e0b; color: white; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: bold;">Pendiente #1</span>
+            <h2 style="margin: 0;">3 migraciones sin ejecutar</h2>
+        </div>
+
+        <table class="tabla-explicacion">
+            <tr><th style="width: 30%;">Tipo</th><td>Migraciones en estado "Pending" — tablas faltantes en la BD</td></tr>
+            <tr><th>Tablas que faltaban</th><td>testimonios, articulos, categorias</td></tr>
+            <tr><th>Solución</th><td><code>php artisan migrate</code></td></tr>
+        </table>
+
+        <div class="bloque-codigo">
+            <div class="codigo-header">
+                <span class="codigo-archivo">Terminal — resultado de php artisan migrate</span>
+            </div>
+            <pre><code class="language-bash">INFO  Running migrations.
+
+  2026_03_10_205301_create_testimonios_table ......... 38ms DONE
+  2026_03_10_210547_create_articulos_table ........... 16ms DONE
+  2026_03_10_210548_create_categorias_table ........... 7ms DONE</code></pre>
+        </div>
+        <div style="background: #fefce8; padding: 0.75rem 1rem; border-radius: 0.5rem; margin-top: 0.75rem; font-size: 0.875rem;">
+            <strong>💡 Lección:</strong> Ejecutar <code>php artisan migrate:status</code> es parte de cualquier auditoría. Si hay migraciones "Pending", las tablas no existen y cualquier consulta a esos modelos generará un error.
+        </div>
+    </div>
+
+    <!-- COMO HACER AUDITORIA -->
+    <div class="bloque-nota" style="margin-top: 2rem;">
+        <h2>🛠️ Checklist de auditoría — úsalo en cualquier proyecto</h2>
+        <table class="tabla-explicacion">
+            <thead><tr><th>Verificación</th><th>Comando o método</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td>Ver rutas registradas</td>
+                    <td><code>php artisan route:list</code></td>
+                </tr>
+                <tr>
+                    <td>Ver estado de migraciones</td>
+                    <td><code>php artisan migrate:status</code></td>
+                </tr>
+                <tr>
+                    <td>Buscar archivos huérfanos en components</td>
+                    <td>Listar archivos y buscar cuáles se llaman con <code>&lt;x-nombre /&gt;</code></td>
+                </tr>
+                <tr>
+                    <td>Verificar scopes usados en vistas</td>
+                    <td>Buscar en .blade.php los métodos encadenados y confirmar que existan en el modelo</td>
+                </tr>
+                <tr>
+                    <td>Limpiar caché después de cambios</td>
+                    <td><code>php artisan route:clear ; view:clear ; cache:clear</code></td>
+                </tr>
+                <tr>
+                    <td>Verificar que no haya migraciones duplicadas</td>
+                    <td>Buscar nombres similares en <code>database/migrations/</code></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ESTADO FINAL -->
+    <div class="bloque-resumen">
+        <h2>📋 Estado final del proyecto tras la auditoría</h2>
+        <ul class="resumen-lista">
+            <li>✅ Todas las rutas nombradas están registradas en web.php</li>
+            <li>✅ Todos los scopes usados en vistas existen en los modelos</li>
+            <li>✅ El layout usa el footer correcto con datos dinámicos</li>
+            <li>✅ No hay migraciones duplicadas</li>
+            <li>✅ No hay archivos huérfanos en components/</li>
+            <li>✅ Todas las migraciones han sido ejecutadas (0 Pending)</li>
+            <li>✅ Caché limpiada: route, view, config</li>
+        </ul>
+    </div>
+
+    <div class="leccion-nav">
+        <a href="index.html" class="btn-nav btn-atras">← Volver al índice</a>
+        <a href="../modulo-11-correcciones-rutas/index.html" class="btn-nav btn-siguiente">Ver Módulo 11 →</a>
+    </div>
+
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>11.5 Nav-links con rutas reales</title>
+    <link rel="stylesheet" href="../micss/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+</head>
+<body>
+<div class="leccion-contenedor">
+
+    <div class="leccion-header">
+        <span class="leccion-badge">Lección 11.5</span>
+        <h1>Actualizar nav-links con rutas reales</h1>
+        <p class="leccion-descripcion">Reemplazar todos los href="#" del menú por route() funcionales</p>
+    </div>
+
+    <!-- ANALOGIA -->
+    <div class="bloque-analogia">
+        <h2>🗺️ La analogía del mapa falso</h2>
+        <p>Imagina que te dan un mapa de la ciudad, pero todos los íconos de destino tienen escrito "aquí" en vez de la dirección real. Puedes ver el mapa, parece que funciona, pero cuando intentas ir a cualquier lugar… te quedas parado en el mismo sitio.</p>
+        <p>Eso era nuestro menú: links que se veían bien, pero todos apuntaban a <code>#</code> — la dirección de "ningún lugar".</p>
+    </div>
+
+    <!-- EL PROBLEMA -->
+    <div class="bloque-error">
+        <h2>🔴 El problema: href="#" en todos los links</h2>
+        <p>El menú fue creado con placeholder <code>#</code> porque las rutas no existían aún. Una vez que registramos todas las rutas en web.php, era hora de actualizar los links.</p>
+        <div class="bloque-codigo">
+            <div class="codigo-header" style="background: #dc2626;">
+                <span class="codigo-archivo">❌ ANTES — navigation-menu.blade.php</span>
+            </div>
+            <pre><code class="language-html">&lt;x-nav-link href="#" :active="request()->routeIs('especialidades*')"&gt;
+    Especialidades
+&lt;/x-nav-link&gt;
+
+&lt;x-nav-link href="#" :active="request()->routeIs('servicios*')"&gt;
+    Servicios
+&lt;/x-nav-link&gt;
+
+&lt;a href="#" class="btn-cta"&gt;
+    Reservar Cita
+&lt;/a&gt;</code></pre>
+        </div>
+    </div>
+
+    <!-- MICRO-CODIGO -->
+    <div class="bloque-codigo">
+        <div class="codigo-header" style="background: #16a34a;">
+            <span class="codigo-archivo">✅ DESPUÉS — navigation-menu.blade.php</span>
+        </div>
+        <pre><code class="language-html">&lt;x-nav-link href="{{ route('especialidades.index') }}" :active="request()->routeIs('especialidades*')"&gt;
+    Especialidades
+&lt;/x-nav-link&gt;
+
+&lt;x-nav-link href="{{ route('servicios') }}" :active="request()->routeIs('servicios*')"&gt;
+    Servicios
+&lt;/x-nav-link&gt;
+
+&lt;a href="{{ route('citas.agendar') }}" class="btn-cta"&gt;
+    Reservar Cita
+&lt;/a&gt;</code></pre>
+    </div>
+
+    <!-- TODOS LOS LINKS ACTUALIZADOS -->
+    <div class="bloque-pasos">
+        <h2>📋 Todos los links del menú actualizados</h2>
+
+        <table class="tabla-explicacion">
+            <thead>
+                <tr><th>Texto del link</th><th>Antes (roto)</th><th>Después (funcional)</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Inicio</td>
+                    <td><code>href="#"</code></td>
+                    <td><code>route('inicio')</code></td>
+                </tr>
+                <tr>
+                    <td>Especialidades</td>
+                    <td><code>href="#"</code></td>
+                    <td><code>route('especialidades.index')</code></td>
+                </tr>
+                <tr>
+                    <td>Servicios</td>
+                    <td><code>href="#"</code></td>
+                    <td><code>route('servicios')</code></td>
+                </tr>
+                <tr>
+                    <td>Nuestros Médicos</td>
+                    <td><code>href="#"</code></td>
+                    <td><code>route('doctores.index')</code></td>
+                </tr>
+                <tr>
+                    <td>Blog de Salud</td>
+                    <td><code>href="#"</code></td>
+                    <td><code>route('blog.index')</code></td>
+                </tr>
+                <tr>
+                    <td>Contacto</td>
+                    <td><code>href="#"</code></td>
+                    <td><code>route('contacto')</code></td>
+                </tr>
+                <tr>
+                    <td>Reservar Cita (CTA)</td>
+                    <td><code>href="#"</code></td>
+                    <td><code>route('citas.agendar')</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p style="margin-top: 1rem; color: #6b7280; font-size: 0.875rem;">Nota: Los links del menú móvil también se actualizaron de la misma forma.</p>
+    </div>
+
+    <!-- ACTIVE STATE -->
+    <div class="bloque-explicacion">
+        <h2>🎨 El estado "activo" del link</h2>
+        <p>Además de la URL, cada link tiene un estado activo para resaltarse cuando estás en esa página:</p>
+
+        <div class="bloque-codigo">
+            <div class="codigo-header">
+                <span class="codigo-archivo">📄 navigation-menu.blade.php — estado activo</span>
+            </div>
+            <pre><code class="language-html">&lt;x-nav-link
+    href="{{ route('blog.index') }}"
+    :active="request()->routeIs('blog*')"
+&gt;
+    Blog de Salud
+&lt;/x-nav-link&gt;</code></pre>
+        </div>
+
+        <table class="tabla-explicacion">
+            <thead><tr><th>Código</th><th>¿Qué hace?</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><code>:active="..."</code></td>
+                    <td>Le pasa true/false al componente para aplicar estilos de "estás aquí"</td>
+                </tr>
+                <tr>
+                    <td><code>request()->routeIs('blog*')</code></td>
+                    <td>Devuelve true si la ruta actual empieza con "blog" — funciona para /blog y /blog/articulo-1</td>
+                </tr>
+                <tr>
+                    <td>El <code>*</code> al final</td>
+                    <td>Es un comodín — "cualquier ruta que empiece por blog"</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- FLUJO COMPLETO -->
+    <div class="bloque-nota">
+        <h2>🔁 El flujo completo que funciona ahora</h2>
+        <ol style="line-height: 2.5;">
+            <li><strong>web.php</strong>: registra la ruta <code>/especialidades</code> con nombre <code>especialidades.index</code></li>
+            <li><strong>resources/views/paginas/especialidades.blade.php</strong>: existe como archivo</li>
+            <li><strong>navigation-menu.blade.php</strong>: el link usa <code>route('especialidades.index')</code></li>
+            <li><strong>footer.blade.php</strong>: igual, usa <code>route('especialidades.index')</code></li>
+            <li>✅ El usuario hace clic → llega a /especialidades → ve la página "en construcción"</li>
+        </ol>
+    </div>
+
+    <!-- RESUMEN FINAL DEL MODULO -->
+    <div class="bloque-resumen">
+        <h2>📋 Resumen de la lección — y del Módulo 11 completo</h2>
+        <ul class="resumen-lista">
+            <li>Reemplaza <code>href="#"</code> por <code>href="{{ route('nombre') }}"</code> cuando la ruta esté registrada</li>
+            <li>El estado activo usa <code>:active="request()->routeIs('ruta*')"</code></li>
+            <li>El asterisco <code>*</code> en routeIs es un comodín para rutas anidadas</li>
+            <li>Recuerda actualizar tanto el menú <strong>desktop</strong> como el menú <strong>móvil</strong></li>
+        </ul>
+
+        <div style="margin-top: 1.5rem; background: #eff6ff; border: 2px solid #3b82f6; padding: 1.5rem; border-radius: 0.5rem;">
+            <h3 style="color: #1e40af; margin-bottom: 1rem;">🎉 Lo que logramos en el Módulo 11</h3>
+            <ul style="color: #1e3a8a; line-height: 2;">
+                <li>✅ Rutas nombradas para todas las páginas del proyecto</li>
+                <li>✅ Vistas placeholder que evitan errores mientras construimos</li>
+                <li>✅ JSON-LD generado de forma segura con json_encode()</li>
+                <li>✅ Props opcionales con isset() en el layout</li>
+                <li>✅ Menú de navegación con rutas reales en desktop y móvil</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="leccion-nav">
+        <a href="leccion-11-4-props-isset-blade.html" class="btn-nav btn-atras">← Anterior: Props isset()</a>
+        <a href="index.html" class="btn-nav btn-siguiente">Volver al índice del módulo →</a>
+    </div>
+
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+</body>
+</html>

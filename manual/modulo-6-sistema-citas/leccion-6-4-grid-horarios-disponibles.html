@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lección 6.4 - Grid de Horarios Disponibles</title>
+    <link rel="stylesheet" href="../micss/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
+</head>
+<body>
+<div class="leccion-contenedor">
+<article>
+
+<h1 class="leccion-titulo">Lección 6.4: Grid de Horarios Disponibles</h1>
+<h2>Componente Livewire HorarioSelector - Toggle de horarios</h2>
+
+<div class="analogia-caja">
+    <strong>🎯 Piensa en esto:</strong> Es como cuando vas a comprar entradas de cine. Ves una cuadrícula con todos los horarios, los que ya están vendidos aparecen tachados, y tú haces clic en el que quieres. Así funciona nuestro selector de horarios médicos.
+</div>
+
+<div class="tarjeta-paso">
+    <span class="paso-numero">1</span>
+    <strong>Crear el componente Livewire</strong>
+    <p>Este componente mostrará los horarios disponibles según el doctor y fecha seleccionados.</p>
+    <p><strong>📍 Archivo:</strong> <code>app/Livewire/HorarioSelector.php</code></p>
+    <pre><code class="language-php">class HorarioSelector extends Component
+{
+    public ?int $doctorId = null;
+    public ?string $fecha = null;
+    public ?string $horaSeleccionada = null;
+    public array $horarios = [];
+
+    public function mount(?int $doctorId = null, ?string $fecha = null)
+    {
+        $this->doctorId = $doctorId;
+        $this->fecha = $fecha ?? now()->format('Y-m-d');
+        $this->generarHorarios();
+    }
+}</code></pre>
+    <p style="color: #6b7280;">💡 Las propiedades <code>public</code> son reactivas. Si cambian, la vista se actualiza sola.</p>
+</div>
+
+<div class="tarjeta-paso">
+    <span class="paso-numero">2</span>
+    <strong>Generar los slots de horario</strong>
+    <p>Creamos intervalos de 30 minutos y verificamos cuáles están ocupados.</p>
+    <p><strong>📍 Archivo:</strong> <code>app/Livewire/HorarioSelector.php</code></p>
+    <pre><code class="language-php">public function generarHorarios()
+{
+    $this->horarios = [];
+    
+    // Horario de atención: 9:00 AM a 6:00 PM
+    $inicio = Carbon::createFromTime(9, 0);
+    $fin = Carbon::createFromTime(18, 0);
+
+    // Obtener citas existentes
+    $citasOcupadas = Cita::where('doctor_id', $this->doctorId)
+        ->where('fecha', $this->fecha)
+        ->whereIn('estado', ['pendiente', 'confirmada'])
+        ->pluck('hora')
+        ->map(fn ($hora) => Carbon::parse($hora)->format('H:i'))
+        ->toArray();</code></pre>
+</div>
+
+<div class="micro-codigo-destacado">
+    <h4>📝 ESTE ES EL CÓDIGO QUE VAMOS A APRENDER:</h4>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/livewire/horario-selector.blade.php</code></p>
+    <pre><code class="language-php">&lt;div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3"&gt;
+    @foreach($horarios as $slot)
+        &lt;button
+            type="button"
+            wire:click="seleccionarHora('{{ $slot['hora'] }}')"
+            @disabled(!$slot['disponible'])
+            class="relative px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200
+                {{ $horaSeleccionada === $slot['hora'] 
+                    ? 'bg-medico-azul-500 text-white shadow-lg' 
+                    : ($slot['disponible'] 
+                        ? 'bg-white border-2 border-gray-200 hover:border-medico-azul-300' 
+                        : 'bg-gray-100 text-gray-400 cursor-not-allowed') }}"&gt;
+            {{ $slot['formato'] }}
+        &lt;/button&gt;
+    @endforeach
+&lt;/div&gt;</code></pre>
+</div>
+
+<h4>🔍 Vamos a entender línea por línea:</h4>
+
+<div class="linea-explicacion">
+    <code>wire:click="seleccionarHora('{{ $slot['hora'] }}')"</code>
+    <br>→ Cuando haces clic, Livewire ejecuta el método <code>seleccionarHora</code> en el servidor con la hora elegida.
+</div>
+
+<div class="linea-explicacion">
+    <code>@disabled(!$slot['disponible'])</code>
+    <br>→ Si el slot está ocupado, desactiva el botón. El usuario no puede hacer clic en horarios ya reservados.
+</div>
+
+<div class="linea-explicacion">
+    <code>$horaSeleccionada === $slot['hora'] ? 'bg-medico-azul-500' : ...</code>
+    <br>→ Operador ternario: si la hora está seleccionada, fondo azul; si no, verifica si está disponible.
+</div>
+
+<div class="tabla-visual">
+    <h4>📊 Estados visuales de los horarios:</h4>
+    <table>
+        <tr><th>Estado</th><th>Color</th><th>Interactividad</th></tr>
+        <tr><td class="celda-destacada">Seleccionado</td><td>Azul + sombra</td><td>Activo</td></tr>
+        <tr><td>Disponible</td><td>Blanco + borde gris</td><td>Clickable</td></tr>
+        <tr><td>Ocupado</td><td>Gris claro + tachado</td><td>Desactivado</td></tr>
+    </table>
+</div>
+
+<details class="codigo-completo">
+    <summary>📁 Método generarHorarios completo</summary>
+    <pre><code class="language-php">public function generarHorarios()
+{
+    $this->horarios = [];
+
+    if (!$this->doctorId || !$this->fecha) {
+        return;
+    }
+
+    $inicio = Carbon::createFromTime(9, 0);
+    $fin = Carbon::createFromTime(18, 0);
+
+    $citasOcupadas = Cita::where('doctor_id', $this->doctorId)
+        ->where('fecha', $this->fecha)
+        ->whereIn('estado', ['pendiente', 'confirmada'])
+        ->pluck('hora')
+        ->map(fn ($hora) => Carbon::parse($hora)->format('H:i'))
+        ->toArray();
+
+    while ($inicio <= $fin) {
+        $hora = $inicio->format('H:i');
+        $this->horarios[] = [
+            'hora' => $hora,
+            'disponible' => !in_array($hora, $citasOcupadas),
+            'formato' => $inicio->format('h:i A'),
+        ];
+        $inicio->addMinutes(30);
+    }
+}</code></pre>
+</details>
+
+<div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 0.5rem; padding: 1.5rem;">
+    <h4 style="color: #1e40af;">🎉 ¿Qué aprendimos hoy?</h4>
+    <ul>
+        <li><code>wire:click</code> conecta clics del usuario con métodos PHP</li>
+        <li><code>@disabled</code> desactiva botones condicionalmente</li>
+        <li><code>Carbon::createFromTime()</code> crea objetos de fecha/hora</li>
+        <li><code>addMinutes(30)</code> genera intervalos de media hora</li>
+        <li>Verificamos citas existentes para marcar horarios ocupados</li>
+    </ul>
+</div>
+
+<p style="font-size: 1.1rem;">¡Genial! Ya tienes un selector de horarios funcional. En la siguiente lección agregaremos el modal de confirmación.</p>
+
+</article>
+</div>
+</body>
+</html>

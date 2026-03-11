@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lección 5.2 - Timeline de Trayectoria</title>
+    <link rel="stylesheet" href="../micss/style.css">
+    <!-- Prism.js -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+</head>
+<body>
+<div class="leccion-contenedor">
+<article>
+
+<h1 class="leccion-titulo">Lección 5.2: Timeline de Trayectoria</h1>
+<h2>Componente Livewire Timeline - Estudios y especializaciones</h2>
+
+<!-- 1. Analogía -->
+<div class="analogia-caja">
+    <strong>🎯 Piensa en esto:</strong> ¿Alguna vez has visto esos árboles genealógicos donde cada generación está conectada con líneas? Un timeline es igual, pero en lugar de ancestros, muestra los logros de una persona en orden cronológico. Es como contar la historia de tu vida profesional paso a paso.
+</div>
+
+<!-- 2. Pasos numerados -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">1</span>
+    <strong>Crear el componente Livewire</strong>
+    <p>Livewire es como Blade con superpoderes: puede reaccionar a eventos del usuario sin escribir JavaScript. Vamos a crear uno para el timeline.</p>
+    <p><strong>📍 Archivo:</strong> <code>app/Livewire/TimelineTrayectoria.php</code></p>
+    <pre><code class="language-bash"># Creamos la carpeta primero (si no existe)
+mkdir app/Livewire</code></pre>
+    <p style="color: #6b7280;">💡 En Windows puedes crear la carpeta desde el explorador de archivos o con PowerShell.</p>
+</div>
+
+<div class="tarjeta-paso">
+    <span class="paso-numero">2</span>
+    <strong>Definir la propiedad de eventos</strong>
+    <p>En Livewire, las variables que empiezan con <code>public</code> son "reactivas". Si cambian, la vista se actualiza automáticamente.</p>
+    <p><strong>📍 Archivo:</strong> <code>app/Livewire/TimelineTrayectoria.php</code></p>
+    <pre><code class="language-php">&lt;?php
+
+namespace App\Livewire;
+
+use Livewire\Component;
+
+class TimelineTrayectoria extends Component
+{
+    public array $eventos = [];
+
+    public function mount(array $eventos = null)
+    {
+        // Si no pasamos eventos, usar datos de ejemplo
+        $this->eventos = $eventos ?? [
+            ['anio' => '2024', 'titulo' => 'Director Médico', ...],
+            ['anio' => '2020', 'titulo' => 'Especialización', ...],
+        ];
+    }
+
+    public function render()
+    {
+        return view('livewire.timeline-trayectoria');
+    }
+}</code></pre>
+    <p style="color: #6b7280;">💡 <code>mount()</code> es como el constructor de Livewire. Se ejecuta cuando el componente se inicializa.</p>
+</div>
+
+<div class="tarjeta-paso">
+    <span class="paso-numero">3</span>
+    <strong>Crear la vista del timeline</strong>
+    <p>Ahora vamos a hacer que esos datos se vean bonitos. Usaremos una línea vertical con círculos para cada año.</p>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/livewire/timeline-trayectoria.blade.php</code></p>
+    <pre><code class="language-bash"># Crear la carpeta de vistas Livewire
+mkdir resources/views/livewire</code></pre>
+</div>
+
+<!-- 3. Micro-código destacado -->
+<div class="micro-codigo-destacado">
+    <h4>📝 ESTE ES EL CÓDIGO QUE VAMOS A APRENDER:</h4>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/livewire/timeline-trayectoria.blade.php</code></p>
+    <pre><code class="language-php">&lt;!-- Línea vertical central --&gt;
+&lt;div class="absolute left-8 md:left-1/2 transform md:-translate-x-px 
+            top-0 bottom-0 w-0.5 
+            bg-gradient-to-b from-medico-azul-500 via-medico-verde-500 to-medico-azul-200"&gt;
+&lt;/div&gt;
+
+&lt;!-- Cada evento del timeline --&gt;
+@foreach($eventos as $index => $evento)
+    &lt;div class="relative mb-12"
+         x-intersect="visible[{{ $index }}] = true"&gt;
+        
+        &lt;!-- Círculo con el año --&gt;
+        &lt;div class="absolute left-8 md:left-1/2 transform -translate-x-1/2 
+                    w-16 h-16 rounded-full flex items-center justify-center 
+                    text-white font-bold shadow-lg z-10
+                    bg-gradient-to-br from-medico-azul-500 to-medico-azul-600"&gt;
+            {{ $evento['anio'] }}
+        &lt;/div&gt;
+        
+        &lt;!-- Card con información --&gt;
+        &lt;div class="p-6 bg-white rounded-2xl shadow-lg"&gt;
+            &lt;h3&gt;{{ $evento['titulo'] }}&lt;/h3&gt;
+            &lt;p&gt;{{ $evento['institucion'] }}&lt;/p&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+@endforeach</code></pre>
+</div>
+
+<!-- 4. Explicación línea por línea -->
+<h4>🔍 Vamos a entender línea por línea (como si fuera la primera vez):</h4>
+
+<div class="linea-explicacion">
+    <code>public array $eventos = [];</code>
+    <br>→ Declaramos una variable pública que Livewire vigilará. <code>array</code> es el tipo de dato (una lista de elementos). El <code>= []</code> la inicializa vacía.
+</div>
+
+<div class="linea-explicacion">
+    <code>$this->eventos = $eventos ?? [...]</code>
+    <br>→ El operador <code>??</code> significa "si no existe, usa esto". Es como decir: "¿Me pasaron eventos? No, entonces uso estos de ejemplo".
+</div>
+
+<div class="linea-explicacion">
+    <code>x-intersect="visible[{{ $index }}] = true"</code>
+    <br>→ <code>x-intersect</code> es de Alpine.js. Detecta cuando un elemento entra en la pantalla visible. <code>{{ $index }}</code> es el número del evento (0, 1, 2...).
+</div>
+
+<div class="linea-explicacion">
+    <code>md:left-1/2 transform -translate-x-1/2</code>
+    <br>→ En pantallas medianas, posiciona el elemento en la mitad (<code>left-1/2</code>) y luego lo mueve a la izquierda la mitad de su ancho (<code>-translate-x-1/2</code>) para centrarlo perfecto.
+</div>
+
+<!-- 5. Tabla visual -->
+<div class="tabla-visual">
+    <h4>📊 Estructura de cada evento del timeline:</h4>
+    <table>
+        <tr>
+            <th>Clave</th>
+            <th>Valor ejemplo</th>
+            <th>Para qué sirve</th>
+        </tr>
+        <tr>
+            <td class="celda-destacada">anio</td>
+            <td>'2024'</td>
+            <td>Año del evento (aparece en el círculo)</td>
+        </tr>
+        <tr>
+            <td>titulo</td>
+            <td>'Director Médico'</td>
+            <td>Nombre del logro o posición</td>
+        </tr>
+        <tr>
+            <td>institucion</td>
+            <td>'Clínica Premium'</td>
+            <td>Donde ocurrió el evento</td>
+        </tr>
+        <tr>
+            <td>descripcion</td>
+            <td>'Liderazgo del equipo...'</td>
+            <td>Detalles adicionales</td>
+        </tr>
+        <tr>
+            <td>tipo</td>
+            <td>'cargo', 'estudio', 'titulo'</td>
+            <td>Define el color del círculo</td>
+        </tr>
+    </table>
+    <p style="color: #92400e; font-weight: bold;">👆 El campo "tipo" determina el color: azul para títulos, verde para estudios, gris para cargos.</p>
+</div>
+
+<!-- 6. Código completo colapsable -->
+<details class="codigo-completo">
+    <summary>📁 ¿Quieres ver el código completo del componente PHP? (opcional)</summary>
+    <p style="color: #6b7280;">Este es el archivo completo del componente Livewire:</p>
+    <pre><code class="language-php">&lt;?php
+
+namespace App\Livewire;
+
+use Livewire\Component;
+
+class TimelineTrayectoria extends Component
+{
+    public array $eventos = [];
+
+    public function mount(array $eventos = null)
+    {
+        $this->eventos = $eventos ?? [
+            [
+                'anio' => '2024',
+                'titulo' => 'Director Médico',
+                'institucion' => 'Clínica Médica Premium',
+                'descripcion' => 'Liderazgo del equipo médico',
+                'tipo' => 'cargo',
+            ],
+            [
+                'anio' => '2020',
+                'titulo' => 'Especialización en Cardiología',
+                'institucion' => 'Universidad Nacional',
+                'descripcion' => 'Estudios de posgrado',
+                'tipo' => 'estudio',
+            ],
+            [
+                'anio' => '2010',
+                'titulo' => 'Médico Titulado',
+                'institucion' => 'Universidad Cayetano Heredia',
+                'descripcion' => 'Título profesional',
+                'tipo' => 'titulo',
+            ],
+        ];
+    }
+
+    public function render()
+    {
+        return view('livewire.timeline-trayectoria');
+    }
+}</code></pre>
+</details>
+
+<!-- 7. Resumen final -->
+<div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 0.5rem; padding: 1.5rem;">
+    <h4 style="color: #1e40af;">🎉 ¿Qué aprendimos hoy?</h4>
+    <ul>
+        <li>Livewire crea componentes interactivos sin escribir JavaScript</li>
+        <li><code>mount()</code> inicializa datos cuando el componente carga</li>
+        <li>Las variables <code>public</code> en Livewire son reactivas</li>
+        <li><code>x-intersect</code> de Alpine.js detecta cuando algo aparece en pantalla</li>
+        <li>El operador <code>??</code> proporciona valores por defecto</li>
+    </ul>
+</div>
+
+<p style="font-size: 1.1rem;">¡Perfecto! Ya tienes un timeline profesional que se anima al hacer scroll. En la siguiente lección veremos cómo mostrar logos de instituciones con efecto grayscale.</p>
+
+</article>
+</div>
+</body>
+</html>

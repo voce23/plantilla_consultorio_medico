@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lección 7.3: Contador de Estadísticas</title>
+    <link rel="stylesheet" href="../micss/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+</head>
+<body>
+<div class="leccion-contenedor">
+<article>
+
+<h1 class="leccion-titulo">Lección 7.3: Contador de Estadísticas</h1>
+<h2>Componente StatsCounter con animación de números</h2>
+
+<!-- Analogía -->
+<div class="analogia-caja">
+    <strong>🎯 Piensa en esto:</strong> Imagina que estás viendo un documental sobre la naturaleza y aparece en pantalla "Más de 1 millón de especies en el Amazonas". El número no aparece de golpe, sino que va subiendo rápidamente desde cero hasta llegar al millón. Ese efecto visual capta tu atención y hace que el dato sea más impactante. Eso es exactamente lo que vamos a hacer.
+</div>
+
+<!-- Paso 1 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">1</span>
+    <strong>Crear el componente Blade</strong>
+    <p>Vamos a crear un componente reutilizable que muestre estadísticas con animación. Este es diferente porque no necesita Livewire, es puro Blade + Alpine.js.</p>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/components/stats-counter.blade.php</code></p>
+    <pre><code class="language-bash"># No hay comando, creamos el archivo directamente</code></pre>
+    <p style="color: #6b7280;">💡 Los componentes Blade son más ligeros que Livewire cuando no necesitas interactividad compleja.</p>
+</div>
+
+<!-- Paso 2 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">2</span>
+    <strong>Definir las props del componente</strong>
+    <p>Queremos que el componente sea flexible: que podamos pasarle diferentes estadísticas según la página donde lo usemos.</p>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/components/stats-counter.blade.php</code></p>
+    <pre><code class="language-php">@props([
+    'stats' => [],
+    'titulo' => null,
+])
+
+@php
+$statsDefault = [
+    ['valor' => 15000, 'sufijo' => '+', 'label' => 'Pacientes Atendidos', 'icono' => 'users'],
+    ['valor' => 15, 'sufijo' => '+', 'label' => 'Años de Experiencia', 'icono' => 'calendar'],
+    ['valor' => 25, 'sufijo' => '+', 'label' => 'Especialidades', 'icono' => 'academic-cap'],
+    ['valor' => 98, 'sufijo' => '%', 'label' => 'Satisfacción', 'icono' => 'heart'],
+];
+$stats = !empty($stats) ? $stats : $statsDefault;
+@endphp</code></pre>
+    <p style="color: #6b7280;">💡 <code>@props</code> define qué parámetros puede recibir el componente. Si no le pasas nada, usa valores por defecto.</p>
+</div>
+
+<!-- Micro-código destacado -->
+<div class="micro-codigo-destacado">
+    <h4>📝 ESTE ES EL CÓDIGO QUE VAMOS A APRENDER:</h4>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/components/stats-counter.blade.php</code></p>
+    <pre><code class="language-html">&lt;div 
+    x-data="{ current: 0, target: {{ $stat['valor'] }}, duration: 2000, startTime: null }"
+    x-init="
+        $watch('startAnimation', (value) => {
+            if (value) {
+                const animate = (timestamp) => {
+                    if (!startTime) startTime = timestamp;
+                    const progress = Math.min((timestamp - startTime) / duration, 1);
+                    const easeOut = 1 - Math.pow(1 - progress, 3);
+                    current = Math.floor(easeOut * target);
+                    if (progress < 1) {
+                        requestAnimationFrame(animate);
+                    }
+                };
+                requestAnimationFrame(animate);
+            }
+        })
+    "
+&gt;
+    &lt;span x-text="current"&gt;0&lt;/span&gt;{{ $stat['sufijo'] }}
+&lt;/div&gt;</code></pre>
+</div>
+
+<!-- Explicación línea por línea -->
+<h4>🔍 Vamos a entender línea por línea (como si fuera la primera vez):</h4>
+
+<div class="linea-explicacion">
+    <code>x-data="{ current: 0, target: 15000, duration: 2000, startTime: null }"</code> 
+    <br>→ Creamos variables en Alpine: <code>current</code> es el número que se muestra (empieza en 0), <code>target</code> es el número final, <code>duration</code> es cuánto dura la animación (2 segundos), y <code>startTime</code> guarda cuándo empezó.
+</div>
+
+<div class="linea-explicacion">
+    <code>$watch('startAnimation', (value) => { ... })</code> 
+    <br>→ Alpine "observa" la variable <code>startAnimation</code>. Cuando cambia a <code>true</code>, empieza la animación. Esto permite que el contador arranque cuando el usuario hace scroll y ve la sección.
+</div>
+
+<div class="linea-explicacion">
+    <code>const animate = (timestamp) => { ... }</code> 
+    <br>→ Creamos una función que se ejecuta en cada frame de la animación. <code>timestamp</code> es el tiempo actual en milisegundos.
+</div>
+
+<div class="linea-explicacion">
+    <code>const progress = Math.min((timestamp - startTime) / duration, 1)</code> 
+    <br>→ Calculamos qué tan avanzada va la animación. Va de 0 (inicio) a 1 (final). <code>Math.min</code> asegura que no pase de 1.
+</div>
+
+<div class="linea-explicacion">
+    <code>const easeOut = 1 - Math.pow(1 - progress, 3)</code> 
+    <br>→ Aquí está la magia: aplicamos una "curva de suavizado". El número empieza rápido y va frenando al final, como cuando un coche frena suavemente. Sin esto, la animación se vería robótica.
+</div>
+
+<div class="linea-explicacion">
+    <code>current = Math.floor(easeOut * target)</code> 
+    <br>→ Calculamos el número actual multiplicando el progreso suavizado por el número final, y redondeamos hacia abajo para que sea entero.
+</div>
+
+<div class="linea-explicacion">
+    <code>requestAnimationFrame(animate)</code> 
+    <br>→ Pedimos al navegador que llame a nuestra función de nuevo en el próximo frame. Esto crea un bucle hasta que la animación termina.
+</div>
+
+<!-- Paso 3 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">3</span>
+    <strong>El trigger de la animación con x-intersect</strong>
+    <p>Queremos que la animación empiece solo cuando el usuario haga scroll y vea la sección, no antes.</p>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/components/stats-counter.blade.php</code></p>
+    <pre><code class="language-html">&lt;section 
+    x-data="statsCounter()"
+    x-intersect="startAnimation = true"
+&gt;</code></pre>
+    <p style="color: #6b7280;">💡 <code>x-intersect</code> es como un detector de proximidad: detecta cuando el elemento entra en la pantalla.</p>
+</div>
+
+<!-- Paso 4 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">4</span>
+    <strong>Usar el componente en cualquier página</strong>
+    <p>Una vez creado, usarlo es tan fácil como escribir una etiqueta HTML.</p>
+    <p><strong>📍 Archivo:</strong> Cualquier vista Blade</p>
+    <pre><code class="language-html">&lt;!-- Con valores por defecto --&gt;
+&lt;x-stats-counter /&gt;
+
+&lt;!-- Con valores personalizados --&gt;
+&lt;x-stats-counter 
+    titulo="Nuestros Números"
+    :stats="[
+        ['valor' => 5000, 'sufijo' => '+', 'label' => 'Cirugías', 'icono' => 'heart'],
+        ['valor' => 50, 'sufijo' => '+', 'label' => 'Doctores', 'icono' => 'users'],
+    ]"
+/&gt;</code></pre>
+    <p style="color: #6b7280;">💡 Fíjate los dos puntos antes de <code>:stats</code> - eso le dice a Blade que es una expresión PHP, no un string.</p>
+</div>
+
+<!-- Código completo colapsible -->
+<details class="codigo-completo">
+    <summary>📁 ¿Quieres ver el código completo del componente? (opcional)</summary>
+    <p style="color: #6b7280;">Esto es solo para que veas dónde va tu código. No necesitas memorizar todo esto:</p>
+    <pre><code class="language-php">&lt;!-- Stats Counter - Contador de Estadísticas Animado --&gt;
+&lt;!-- 📁 Archivo: resources/views/components/stats-counter.blade.php --&gt;
+
+@props([
+    'stats' => [],
+    'titulo' => null,
+])
+
+@php
+$statsDefault = [
+    ['valor' => 15000, 'sufijo' => '+', 'label' => 'Pacientes Atendidos', 'icono' => 'users'],
+    ['valor' => 15, 'sufijo' => '+', 'label' => 'Años de Experiencia', 'icono' => 'calendar'],
+    ['valor' => 25, 'sufijo' => '+', 'label' => 'Especialidades', 'icono' => 'academic-cap'],
+    ['valor' => 98, 'sufijo' => '%', 'label' => 'Satisfacción', 'icono' => 'heart'],
+];
+$stats = !empty($stats) ? $stats : $statsDefault;
+@endphp
+
+&lt;section 
+    class="py-20 bg-gradient-to-br from-medico-azul-600 to-medico-azul-800"
+    x-data="statsCounter()"
+    x-intersect="startAnimation = true"
+&gt;
+    &lt;div class="px-4 mx-auto max-w-7xl"&gt;
+        &lt;div class="grid grid-cols-2 lg:grid-cols-4 gap-8"&gt;
+            @foreach($stats as $index => $stat)
+                &lt;div class="text-center"&gt;
+                    &lt;div class="text-4xl md:text-5xl font-bold text-white mb-2"&gt;
+                        &lt;span x-text="current"&gt;0&lt;/span&gt;{{ $stat['sufijo'] }}
+                    &lt;/div&gt;
+                    &lt;p class="text-medico-azul-100 text-lg"&gt;{{ $stat['label'] }}&lt;/p&gt;
+                &lt;/div&gt;
+            @endforeach
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;script&gt;
+        function statsCounter() {
+            return { startAnimation: false }
+        }
+    &lt;/script&gt;
+&lt;/section&gt;</code></pre>
+</details>
+
+<!-- Resumen -->
+<div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 0.5rem; padding: 1.5rem;">
+    <h4 style="color: #1e40af;">🎉 ¿Qué aprendimos hoy?</h4>
+    <ul>
+        <li><code>requestAnimationFrame</code> crea animaciones suaves usando el ciclo de renderizado del navegador</li>
+        <li>La "easing function" (<code>easeOut</code>) hace que las animaciones se vean naturales, no robóticas</li>
+        <li><code>x-intersect</code> detecta cuando un elemento entra en la pantalla y dispara la animación</li>
+        <li>Los componentes Blade con <code>@props</code> son reutilizables y flexibles</li>
+        <li>El contador animado capta la atención y hace los datos más memorables</li>
+    </ul>
+</div>
+
+<p style="font-size: 1.1rem;">¡Excelente! Ahora tienes un contador animado que impresiona. Vamos a terminar el módulo con un widget de Google Reviews que da confianza a los visitantes. ¡Nos vemos en la última lección! 🏆</p>
+
+</article>
+</div>
+</body>
+</html>

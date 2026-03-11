@@ -1,0 +1,1485 @@
+---
+title: Overview
+---
+import Aside from "@components/Aside.astro"
+import AutoScreenshot from "@components/AutoScreenshot.astro"
+import UtilityInjection from "@components/UtilityInjection.astro"
+
+## Introduction
+
+Filters allow you to define certain constraints on your data, and allow users to scope it to find the information they need. You put them in the `$table->filters()` method.
+
+Filters may be created using the static `make()` method, passing its unique name. You should then pass a callback to `query()` which applies your filter's scope:
+
+```php
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+
+public function table(Table $table): Table
+{
+    return $table
+        ->filters([
+            Filter::make('is_featured')
+                ->query(fn (Builder $query): Builder => $query->where('is_featured', true))
+            // ...
+        ]);
+}
+```
+
+<AutoScreenshot name="tables/filters/simple" alt="Table with filter" version="5.x" />
+
+## Available filters
+
+By default, using the `Filter::make()` method will render a checkbox form component. When the checkbox is on, the `query()` will be activated.
+
+- You can also [replace the checkbox with a toggle](#using-a-toggle-button-instead-of-a-checkbox).
+- You may use a [select filter](select) to allow users to select from a list of options, and filter using the selection.
+- You can use a [ternary filter](ternary) to replace the checkbox with a select field to allow users to pick between 3 states - usually "true", "false" and "blank". This is useful for filtering boolean columns.
+- The [trashed filter](ternary#filtering-soft-deletable-records) is a pre-built ternary filter that allows you to filter soft-deletable records.
+- Using a [query builder](query-builder), users can create complex sets of filters, with an advanced user interface for combining constraints.
+- You may build [custom filters](custom) with other form fields, to do whatever you want.
+
+## Setting a label
+
+By default, the label of the filter is generated from the name of the filter. You may customize this using the `label()` method:
+
+```php
+use Filament\Tables\Filters\Filter;
+
+Filter::make('is_featured')
+    ->label('Featured')
+```
+
+<UtilityInjection set="tableFilters" version="5.x">As well as allowing a static value, the `label()` method also accepts a function to dynamically calculate it. You can inject various utilities into the function as parameters.</UtilityInjection>
+
+Customizing the label in this way is useful if you wish to use a [translation string for localization](https://laravel.com/docs/localization#retrieving-translation-strings):
+
+```php
+use Filament\Tables\Filters\Filter;
+
+Filter::make('is_featured')
+    ->label(__('filters.is_featured'))
+```
+
+## Customizing the filter schema
+
+By default, creating a filter with the `Filter` class will render a [checkbox form component](../../forms/checkbox). When the checkbox is checked, the `query()` function will be applied to the table's query, scoping the records in the table. When the checkbox is unchecked, the `query()` function will be removed from the table's query.
+
+Filters are built entirely on Filament's form fields. They can render any combination of form fields, which users can then interact with to filter the table.
+
+### Using a toggle button instead of a checkbox
+
+The simplest example of managing the form field that is used for a filter is to replace the [checkbox](../../forms/checkbox) with a [toggle button](../../forms/toggle), using the `toggle()` method:
+
+```php
+use Filament\Tables\Filters\Filter;
+
+Filter::make('is_featured')
+    ->toggle()
+```
+
+<AutoScreenshot name="tables/filters/toggle" alt="Table with toggle filter" version="5.x" />
+
+### Customizing the built-in filter form field
+
+Whether you are using a checkbox, a [toggle](#using-a-toggle-button-instead-of-a-checkbox) or a [select](select), you can customize the built-in form field used for the filter, using the `modifyFormFieldUsing()` method. The method accepts a function with a `$field` parameter that gives you access to the form field object to customize:
+
+```php
+use Filament\Forms\Components\Checkbox;
+use Filament\Tables\Filters\Filter;
+
+Filter::make('is_featured')
+    ->modifyFormFieldUsing(fn (Checkbox $field) => $field->inline(false))
+```
+
+<UtilityInjection set="tableFilters" version="5.x" extras="Field;;Filament\Forms\Components\Field;;$field;;The field object to modify.">The function passed to `modifyFormFieldUsing()` can inject various utilities as parameters.</UtilityInjection>
+
+## Applying the filter by default
+
+You may set a filter to be enabled by default, using the `default()` method:
+
+```php
+use Filament\Tables\Filters\Filter;
+
+Filter::make('is_featured')
+    ->default()
+```
+
+If you're using a [select filter](select), [visit the "applying select filters by default" section](select#applying-select-filters-by-default).
+
+## Persisting filters in the user's session
+
+To persist the table filters in the user's session, use the `persistFiltersInSession()` method:
+
+```php
+use Filament\Tables\Table;
+
+public function table(Table $table): Table
+{
+    return $table
+        ->filters([
+            // ...
+        ])
+        ->persistFiltersInSession();
+}
+```
+
+## Live filters
+
+By default, filter changes are deferred and do not affect the table, until the user clicks an "Apply" button. To disable this and make the filters "live" instead, use the `deferFilters(false)` method:
+
+```php
+use Filament\Tables\Table;
+
+public function table(Table $table): Table
+{
+    return $table
+        ->filters([
+            // ...
+        ])
+        ->deferFilters(false);
+}
+```
+
+### Customizing the apply filters action
+
+When deferring filters, you can customize the "Apply" button, using the `filtersApplyAction()` method, passing a closure that returns an action. All methods that are available to [customize action trigger buttons](../../actions/overview) can be used:
+
+```php
+use Filament\Actions\Action;
+use Filament\Tables\Table;
+
+public function table(Table $table): Table
+{
+    return $table
+        ->filters([
+            // ...
+        ])
+        ->filtersApplyAction(
+            fn (Action $action) => $action
+                ->link()
+                ->label('Save filters to table'),
+        );
+}
+```
+
+## Deselecting records when filters change
+
+By default, all records will be deselected when the filters change. Using the `deselectAllRecordsWhenFiltered(false)` method, you can disable this behavior:
+
+```php
+use Filament\Tables\Table;
+
+public function table(Table $table): Table
+{
+    return $table
+        ->filters([
+            // ...
+        ])
+        ->deselectAllRecordsWhenFiltered(false);
+}
+```
+
+## Modifying the base query
+
+By default, modifications to the Eloquent query performed in the `query()` method will be applied inside a scoped `where()` clause. This is to ensure that the query does not clash with any other filters that may be applied, especially those that use `orWhere()`.
+
+However, the downside of this is that the `query()` method cannot be used to modify the query in other ways, such as removing global scopes, since the base query needs to be modified directly, not the scoped query.
+
+To modify the base query directly, you may use the `baseQuery()` method, passing a closure that receives the base query:
+
+```php
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Tables\Filters\TernaryFilter;
+
+TernaryFilter::make('trashed')
+    // ...
+    ->baseQuery(fn (Builder $query) => $query->withoutGlobalScopes([
+        SoftDeletingScope::class,
+    ]))
+```
+
+## Excluding filters when resolving records
+
+When a user interacts with a table record (e.g., clicking an action button), Filament resolves that record from the database. By default, all active filter conditions are applied, ensuring users cannot access records outside their filter scope.
+
+However, some filters like `TrashedFilter` modify global scopes rather than restricting access. When a record's state changes after the user saw it in the table, you may still want the user to interact with it.
+
+You may mark a filter to be excluded when resolving records using the `excludeWhenResolvingRecord()` method:
+
+```php
+use Filament\Tables\Filters\Filter;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+
+Filter::make('trashed')
+    ->query(fn (Builder $query) => $query->onlyTrashed())
+    ->baseQuery(fn (Builder $query) => $query->withoutGlobalScopes([
+        SoftDeletingScope::class,
+    ]))
+    ->excludeWhenResolvingRecord()
+```
+
+When `excludeWhenResolvingRecord()` is used:
+- The filter's `query()` callback is not applied when resolving records
+- The filter's `baseQuery()` callback is still applied when resolving records
+
+<Aside variant="danger">
+    Do not use `excludeWhenResolvingRecord()` on filters that enforce authorization rules. For example, if you have a filter that restricts records by tenant or user ownership, those filters should remain enforced to prevent unauthorized access.
+</Aside>
+
+## Customizing the filters trigger action
+
+To customize the filters trigger buttons, you may use the `filtersTriggerAction()` method, passing a closure that returns an action. All methods that are available to [customize action trigger buttons](../../actions/overview) can be used:
+
+```php
+use Filament\Actions\Action;
+use Filament\Tables\Table;
+
+public function table(Table $table): Table
+{
+    return $table
+        ->filters([
+            // ...
+        ])
+        ->filtersTriggerAction(
+            fn (Action $action) => $action
+                ->button()
+                ->label('Filter'),
+        );
+}
+```
+
+<AutoScreenshot name="tables/filters/custom-trigger-action" alt="Table with custom filters trigger action" version="5.x" />
+
+## Filter utility injection
+
+The vast majority of methods used to configure filters accept functions as parameters instead of hardcoded values:
+
+```php
+use App\Models\Author;
+use Filament\Tables\Filters\SelectFilter;
+
+SelectFilter::make('author')
+    ->options(fn (): array => Author::query()->pluck('name', 'id')->all())
+```
+
+This alone unlocks many customization possibilities.
+
+The package is also able to inject many utilities to use inside these functions, as parameters. All customization methods that accept functions as arguments can inject utilities.
+
+These injected utilities require specific parameter names to be used. Otherwise, Filament doesn't know what to inject.
+
+### Injecting the current filter instance
+
+If you wish to access the current filter instance, define a `$filter` parameter:
+
+```php
+use Filament\Tables\Filters\BaseFilter;
+
+function (BaseFilter $filter) {
+    // ...
+}
+```
+
+### Injecting the current Livewire component instance
+
+If you wish to access the current Livewire component instance that the table belongs to, define a `$livewire` parameter:
+
+```php
+use Filament\Tables\Contracts\HasTable;
+
+function (HasTable $livewire) {
+    // ...
+}
+```
+
+### Injecting the current table instance
+
+If you wish to access the current table configuration instance that the filter belongs to, define a `$table` parameter:
+
+```php
+use Filament\Tables\Table;
+
+function (Table $table) {
+    // ...
+}
+```
+
+### Injecting multiple utilities
+
+The parameters are injected dynamically using reflection, so you are able to combine multiple parameters in any order:
+
+```php
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Table;
+
+function (HasTable $livewire, Table $table) {
+    // ...
+}
+```
+
+### Injecting dependencies from Laravel's container
+
+You may inject anything from Laravel's container like normal, alongside utilities:
+
+```php
+use Filament\Tables\Table;
+use Illuminate\Http\Request;
+
+function (Request $request, Table $table) {
+    // ...
+}
+```
+
+
+
+---
+title: Select filters
+---
+import AutoScreenshot from "@components/AutoScreenshot.astro"
+import UtilityInjection from "@components/UtilityInjection.astro"
+
+## Introduction
+
+Often, you will want to use a [select field](../../forms/select) instead of a checkbox. This is especially true when you want to filter a column based on a set of pre-defined options that the user can choose from. To do this, you can create a filter using the `SelectFilter` class:
+
+```php
+use Filament\Tables\Filters\SelectFilter;
+
+SelectFilter::make('status')
+    ->options([
+        'draft' => 'Draft',
+        'reviewing' => 'Reviewing',
+        'published' => 'Published',
+    ])
+```
+
+The `options()` that are passed to the filter are the same as those that are passed to the [select field](../../forms/select).
+
+<UtilityInjection set="tableFilters" version="5.x">As well as allowing a static value, the `options()` method also accepts a function to dynamically calculate it. You can inject various utilities into the function as parameters.</UtilityInjection>
+
+## Customizing the column used by a select filter
+
+Select filters do not require a custom `query()` method. The column name used to scope the query is the name of the filter. To customize this, you may use the `attribute()` method:
+
+```php
+use Filament\Tables\Filters\SelectFilter;
+
+SelectFilter::make('status')
+    ->options([
+        'draft' => 'Draft',
+        'reviewing' => 'Reviewing',
+        'published' => 'Published',
+    ])
+    ->attribute('status_id')
+```
+
+<UtilityInjection set="tableFilters" version="5.x">As well as allowing a static value, the `attribute()` method also accepts a function to dynamically calculate it. You can inject various utilities into the function as parameters.</UtilityInjection>
+
+## Multi-select filters
+
+These allow the user to [select multiple options](../../forms/select#multi-select) to apply the filter to their table. For example, a status filter may present the user with a few status options to pick from and filter the table using. When the user selects multiple options, the table will be filtered to show records that match any of the selected options. You can enable this behavior using the `multiple()` method:
+
+```php
+use Filament\Tables\Filters\SelectFilter;
+
+SelectFilter::make('status')
+    ->multiple()
+    ->options([
+        'draft' => 'Draft',
+        'reviewing' => 'Reviewing',
+        'published' => 'Published',
+    ])
+```
+
+## Relationship select filters
+
+Select filters are also able to automatically populate themselves based on a relationship. For example, if your table has a `author` relationship with a `name` column, you may use `relationship()` to filter the records belonging to an author:
+
+```php
+use Filament\Tables\Filters\SelectFilter;
+
+SelectFilter::make('author')
+    ->relationship('author', 'name')
+```
+
+### Preloading the select filter relationship options
+
+If you'd like to populate the searchable options from the database when the page is loaded, instead of when the user searches, you can use the `preload()` method:
+
+```php
+use Filament\Tables\Filters\SelectFilter;
+
+SelectFilter::make('author')
+    ->relationship('author', 'name')
+    ->searchable()
+    ->preload()
+```
+
+### Filtering empty relationships
+
+By default, upon selecting an option, all records that have an empty relationship will be excluded from the results. If you want to introduce an additional "None" option for the user to select, which will include all records that do not have a relationship, you can use the `hasEmptyOption()` argument of the `relationship()` method:
+
+```php
+use Filament\Tables\Filters\SelectFilter;
+
+SelectFilter::make('author')
+    ->relationship('author', 'name', hasEmptyOption: true)
+```
+
+You can rename the "None" option using the `emptyRelationshipOptionLabel()` method:
+
+```php
+use Filament\Tables\Filters\SelectFilter;
+
+SelectFilter::make('author')
+    ->relationship('author', 'name', hasEmptyOption: true)
+    ->emptyRelationshipOptionLabel('No author')
+```
+
+### Customizing the select filter relationship query
+
+You may customize the database query that retrieves options using the third parameter of the `relationship()` method:
+
+```php
+use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Database\Eloquent\Builder;
+
+SelectFilter::make('author')
+    ->relationship('author', 'name', fn (Builder $query) => $query->withTrashed())
+```
+
+### Searching select filter options
+
+You may enable a search input to allow easier access to many options, using the `searchable()` method:
+
+```php
+use Filament\Tables\Filters\SelectFilter;
+
+SelectFilter::make('author')
+    ->relationship('author', 'name')
+    ->searchable()
+```
+
+## Disable placeholder selection
+
+You can remove the placeholder (null option), which disables the filter so all options are applied, using the `selectablePlaceholder()` method:
+
+```php
+use Filament\Tables\Filters\SelectFilter;
+
+SelectFilter::make('status')
+    ->options([
+        'draft' => 'Draft',
+        'reviewing' => 'Reviewing',
+        'published' => 'Published',
+    ])
+    ->default('draft')
+    ->selectablePlaceholder(false)
+```
+
+## Applying select filters by default
+
+You may set a select filter to be enabled by default, using the `default()` method. If using a single select filter, the `default()` method accepts a single option value. If using a `multiple()` select filter, the `default()` method accepts an array of option values:
+
+```php
+use Filament\Tables\Filters\SelectFilter;
+
+SelectFilter::make('status')
+    ->options([
+        'draft' => 'Draft',
+        'reviewing' => 'Reviewing',
+        'published' => 'Published',
+    ])
+    ->default('draft')
+
+SelectFilter::make('status')
+    ->options([
+        'draft' => 'Draft',
+        'reviewing' => 'Reviewing',
+        'published' => 'Published',
+    ])
+    ->multiple()
+    ->default(['draft', 'reviewing'])
+```
+
+<UtilityInjection set="tableFilters" version="5.x">As well as allowing a static value, the `default()` method also accepts a function to dynamically calculate it. You can inject various utilities into the function as parameters.</UtilityInjection>
+
+
+---
+title: Ternary filters
+---
+
+## Introduction
+
+Ternary filters allow you to easily create a select filter which has three states - usually true, false and blank. To filter a column named `is_admin` to be `true` or `false`, you may use the ternary filter:
+
+```php
+use Filament\Tables\Filters\TernaryFilter;
+
+TernaryFilter::make('is_admin')
+```
+
+## Using a ternary filter with a nullable column
+
+Another common pattern is to use a nullable column. For example, when filtering verified and unverified users using the `email_verified_at` column, unverified users have a null timestamp in this column. To apply that logic, you may use the `nullable()` method:
+
+```php
+use Filament\Tables\Filters\TernaryFilter;
+
+TernaryFilter::make('email_verified_at')
+    ->nullable()
+```
+
+## Customizing the column used by a ternary filter
+
+The column name used to scope the query is the name of the filter. To customize this, you may use the `attribute()` method:
+
+```php
+use Filament\Tables\Filters\TernaryFilter;
+
+TernaryFilter::make('verified')
+    ->nullable()
+    ->attribute('status_id')
+```
+
+## Customizing the ternary filter option labels
+
+You may customize the labels used for each state of the ternary filter. The true option label can be customized using the `trueLabel()` method. The false option label can be customized using the `falseLabel()` method. The blank (default) option label can be customized using the `placeholder()` method:
+
+```php
+use Illuminate\Database\Eloquent\Builder;
+use Filament\Tables\Filters\TernaryFilter;
+
+TernaryFilter::make('email_verified_at')
+    ->label('Email verification')
+    ->nullable()
+    ->placeholder('All users')
+    ->trueLabel('Verified users')
+    ->falseLabel('Not verified users')
+```
+
+## Customizing how a ternary filter modifies the query
+
+You may customize how the query changes for each state of the ternary filter, use the `queries()` method:
+
+```php
+use Illuminate\Database\Eloquent\Builder;
+use Filament\Tables\Filters\TernaryFilter;
+
+TernaryFilter::make('email_verified_at')
+    ->label('Email verification')
+    ->placeholder('All users')
+    ->trueLabel('Verified users')
+    ->falseLabel('Not verified users')
+    ->queries(
+        true: fn (Builder $query) => $query->whereNotNull('email_verified_at'),
+        false: fn (Builder $query) => $query->whereNull('email_verified_at'),
+        blank: fn (Builder $query) => $query, // In this example, we do not want to filter the query when it is blank.
+    )
+```
+
+## Filtering soft-deletable records
+
+The `TrashedFilter` can be used to filter soft-deleted records. It is a type of ternary filter that is built-in to Filament. You can use it like so:
+
+```php
+use Filament\Tables\Filters\TrashedFilter;
+
+TrashedFilter::make()
+```
+
+---
+title: Query builder
+---
+
+## Introduction
+
+The query builder allows you to define a complex set of conditions to filter the data in your table. It is able to handle unlimited nesting of conditions, which you can group together with "and" and "or" operations.
+
+To use it, you need to define a set of "constraints" that will be used to filter the data. Filament includes some built-in constraints, that follow common data types, but you can also define your own custom constraints.
+
+You can add a query builder to any table using the `QueryBuilder` filter:
+
+```php
+use Filament\Tables\Filters\QueryBuilder;
+use Filament\QueryBuilder\Constraints\BooleanConstraint;
+use Filament\QueryBuilder\Constraints\DateConstraint;
+use Filament\QueryBuilder\Constraints\NumberConstraint;
+use Filament\QueryBuilder\Constraints\RelationshipConstraint;
+use Filament\QueryBuilder\Constraints\RelationshipConstraint\Operators\IsRelatedToOperator;
+use Filament\QueryBuilder\Constraints\SelectConstraint;
+use Filament\QueryBuilder\Constraints\TextConstraint;
+
+QueryBuilder::make()
+    ->constraints([
+        TextConstraint::make('name'),
+        BooleanConstraint::make('is_visible'),
+        NumberConstraint::make('stock'),
+        SelectConstraint::make('status')
+            ->options([
+                'draft' => 'Draft',
+                'reviewing' => 'Reviewing',
+                'published' => 'Published',
+            ])
+            ->multiple(),
+        DateConstraint::make('created_at'),
+        RelationshipConstraint::make('categories')
+            ->multiple()
+            ->selectable(
+                IsRelatedToOperator::make()
+                    ->titleAttribute('name')
+                    ->searchable()
+                    ->multiple(),
+            ),
+        NumberConstraint::make('reviews.rating')
+            ->integer(),
+    ])
+```
+
+When deeply nesting the query builder, you might need to increase the amount of space that the filters can consume. One way of doing this is to [position the filters above the table content](layout#displaying-filters-above-the-table-content):
+
+```php
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Filters\QueryBuilder;
+use Filament\Tables\Table;
+
+public function table(Table $table): Table
+{
+    return $table
+        ->filters([
+            QueryBuilder::make()
+                ->constraints([
+                    // ...
+                ]),
+        ], layout: FiltersLayout::AboveContent);
+}
+```
+
+## Available constraints
+
+Filament ships with many different constraints that you can use out of the box. You can also [create your own custom constraints](#creating-custom-constraints):
+
+- [Text constraint](#text-constraints)
+- [Boolean constraint](#boolean-constraints)
+- [Number constraint](#number-constraints)
+- [Date constraint](#date-constraints)
+- [Select constraint](#select-constraints)
+- [Relationship constraint](#relationship-constraints)
+
+### Text constraints
+
+Text constraints allow you to filter text fields. They can be used to filter any text field, including via relationships.
+
+```php
+use Filament\QueryBuilder\Constraints\TextConstraint;
+
+TextConstraint::make('name') // Filter the `name` column
+
+TextConstraint::make('creator.name') // Filter the `name` column on the `creator` relationship using dot syntax
+```
+
+By default, the following operators are available:
+
+- Contains - filters a column to contain the search term
+- Does not contain - filters a column to not contain the search term
+- Starts with - filters a column to start with the search term
+- Does not start with - filters a column to not start with the search term
+- Ends with - filters a column to end with the search term
+- Does not end with - filters a column to not end with the search term
+- Equals - filters a column to equal the search term
+- Does not equal - filters a column to not equal the search term
+- Is filled - filters a column to not be empty
+- Is blank - filters a column to be empty
+
+### Boolean constraints
+
+Boolean constraints allow you to filter boolean fields. They can be used to filter any boolean field, including via relationships.
+
+```php
+use Filament\QueryBuilder\Constraints\BooleanConstraint;
+
+BooleanConstraint::make('is_visible') // Filter the `is_visible` column
+
+BooleanConstraint::make('creator.is_admin') // Filter the `is_admin` column on the `creator` relationship using dot syntax
+```
+
+By default, the following operators are available:
+
+- Is true - filters a column to be `true`
+- Is false - filters a column to be `false`
+
+### Number constraints
+
+Number constraints allow you to filter numeric fields. They can be used to filter any numeric field, including via relationships.
+
+```php
+use Filament\QueryBuilder\Constraints\NumberConstraint;
+
+NumberConstraint::make('stock') // Filter the `stock` column
+
+NumberConstraint::make('orders.item_count') // Filter the `item_count` column on the `orders` relationship using dot syntax
+```
+
+By default, the following operators are available:
+
+- Is minimum - filters a column to be greater than or equal to the search number
+- Is less than - filters a column to be less than the search number
+- Is maximum - filters a column to be less than or equal to the search number
+- Is greater than - filters a column to be greater than the search number
+- Equals - filters a column to equal the search number
+- Does not equal - filters a column to not equal the search number
+- Is filled - filters a column to not be empty
+- Is blank - filters a column to be empty
+
+When using relationship column with a number constraint, users also have the ability to "aggregate" related records. This means that they can filter the column to be the sum, average, minimum or maximum of all the related records at once.
+
+#### Integer constraints
+
+By default, number constraints will allow decimal values. If you'd like to only allow integer values, you can use the `integer()` method:
+
+```php
+use Filament\QueryBuilder\Constraints\NumberConstraint;
+
+NumberConstraint::make('stock')
+    ->integer()
+```
+
+### Date constraints
+
+Date constraints allow you to filter date fields. They can be used to filter any date field, including via relationships.
+
+```php
+use Filament\QueryBuilder\Constraints\DateConstraint;
+
+DateConstraint::make('created_at') // Filter the `created_at` column
+
+DateConstraint::make('creator.created_at') // Filter the `created_at` column on the `creator` relationship using dot syntax
+```
+
+By default, the following operators are available:
+
+- Is after - filters a column to be after the search date
+- Is not after - filters a column to not be after the search date, or to be the same date
+- Is before - filters a column to be before the search date
+- Is not before - filters a column to not be before the search date, or to be the same date
+- Is date - filters a column to be the same date as the search date
+- Is not date - filters a column to not be the same date as the search date
+- Is month - filters a column to be in the same month as the selected month
+- Is not month - filters a column to not be in the same month as the selected month
+- Is year - filters a column to be in the same year as the searched year
+- Is not year - filters a column to not be in the same year as the searched year
+
+#### Datetime constraints
+
+By default, date constraints only filter by date. If you have a datetime column and want to enable time-based filtering, you can use the `time()` method:
+
+```php
+use Filament\QueryBuilder\Constraints\DateConstraint;
+
+DateConstraint::make('published_at')
+    ->time()
+```
+
+### Select constraints
+
+Select constraints allow you to filter fields using a select field. They can be used to filter any field, including via relationships.
+
+```php
+use Filament\QueryBuilder\Constraints\SelectConstraint;
+
+SelectConstraint::make('status') // Filter the `status` column
+    ->options([
+        'draft' => 'Draft',
+        'reviewing' => 'Reviewing',
+        'published' => 'Published',
+    ])
+
+SelectConstraint::make('creator.department') // Filter the `department` column on the `creator` relationship using dot syntax
+    ->options([
+        'sales' => 'Sales',
+        'marketing' => 'Marketing',
+        'engineering' => 'Engineering',
+        'purchasing' => 'Purchasing',
+    ])
+```
+
+#### Searchable select constraints
+
+By default, select constraints will not allow the user to search the options. If you'd like to allow the user to search the options, you can use the `searchable()` method:
+
+```php
+use Filament\QueryBuilder\Constraints\SelectConstraint;
+
+SelectConstraint::make('status')
+    ->searchable()
+    ->options([
+        'draft' => 'Draft',
+        'reviewing' => 'Reviewing',
+        'published' => 'Published',
+    ])
+```
+
+#### Multi-select constraints
+
+By default, select constraints will only allow the user to select a single option. If you'd like to allow the user to select multiple options, you can use the `multiple()` method:
+
+```php
+use Filament\QueryBuilder\Constraints\SelectConstraint;
+
+SelectConstraint::make('status')
+    ->multiple()
+    ->options([
+        'draft' => 'Draft',
+        'reviewing' => 'Reviewing',
+        'published' => 'Published',
+    ])
+```
+
+When the user selects multiple options, the table will be filtered to show records that match any of the selected options.
+
+### Relationship constraints
+
+Relationship constraints allow you to filter fields using data about a relationship:
+
+```php
+use Filament\QueryBuilder\Constraints\RelationshipConstraint;
+use Filament\QueryBuilder\Constraints\RelationshipConstraint\Operators\IsRelatedToOperator;
+
+RelationshipConstraint::make('creator') // Filter the `creator` relationship
+    ->selectable(
+        IsRelatedToOperator::make()
+            ->titleAttribute('name')
+            ->searchable()
+            ->multiple(),
+    )
+```
+
+The `IsRelatedToOperator` is used to configure the "Is / Contains" and "Is not / Does not contain" operators. It provides a select field which allows the user to filter the relationship by which records are attached to it. The `titleAttribute()` method is used to specify which attribute should be used to identify each related record in the list. The `searchable()` method makes the list searchable. The `multiple()` method allows the user to select multiple related records, and if they do, the table will be filtered to show records that match any of the selected related records.
+
+#### Multiple relationships
+
+By default, relationship constraints only include operators that are appropriate for filtering a singular relationship, like a `BelongsTo`. If you have a relationship such as a `HasMany` or `BelongsToMany`, you may wish to mark the constraint as `multiple()`:
+
+```php
+use Filament\QueryBuilder\Constraints\RelationshipConstraint;
+
+RelationshipConstraint::make('categories')
+    ->multiple()
+```
+
+This will add the following operators to the constraint:
+
+- Has minimum - filters a column to have at least the specified number of related records
+- Has less than - filters a column to have less than the specified number of related records
+- Has maximum - filters a column to have at most the specified number of related records
+- Has more than - filters a column to have more than the specified number of related records
+- Has - filters a column to have the specified number of related records
+- Does not have - filters a column to not have the specified number of related records
+
+#### Empty relationship constraints
+
+The `RelationshipConstraint` does not support [`nullable()`](#nullable-constraints) in the same way as other constraints.
+
+If the relationship is `multiple()`, then the constraint will show an option to filter out "empty" relationships. This means that the relationship has no related records. If your relationship is singular, then you can use the `emptyable()` method to show an option to filter out "empty" relationships:
+
+```php
+use Filament\QueryBuilder\Constraints\RelationshipConstraint;
+
+RelationshipConstraint::make('creator')
+    ->emptyable()
+```
+
+If you have a `multiple()` relationship that must always have at least 1 related record, then you can use the `emptyable(false)` method to hide the option to filter out "empty" relationships:
+
+```php
+use Filament\QueryBuilder\Constraints\RelationshipConstraint;
+
+RelationshipConstraint::make('categories')
+    ->emptyable(false)
+```
+
+#### Nullable constraints
+
+By default, constraints will not show an option to filter `null` values. If you'd like to show an option to filter `null` values, you can use the `nullable()` method:
+
+```php
+use Filament\QueryBuilder\Constraints\TextConstraint;
+
+TextConstraint::make('name')
+    ->nullable()
+```
+
+Now, the following operators are also available:
+
+- Is filled - filters a column to not be empty
+- Is blank - filters a column to be empty
+
+## Scoping relationships
+
+When you use a relationship constraint, you can scope the relationship to filter the related records using the `modifyRelationshipQueryUsing()` method:
+
+```php
+use Filament\QueryBuilder\Constraints\TextConstraint;
+use Illuminate\Database\Eloquent\Builder;
+
+TextConstraint::make('creator.name')
+    ->label('Admin creator name')
+    ->modifyRelationshipQueryUsing(fn (Builder $query) => $query->where('is_admin', true))
+```
+
+## Customizing the constraint icon
+
+Each constraint type has a default [icon](../../styling/icons), which is displayed next to the label in the picker. You can customize the icon for a constraint by passing its name to the `icon()` method:
+
+```php
+use Filament\QueryBuilder\Constraints\TextConstraint;
+
+TextConstraint::make('author.name')
+    ->icon('heroicon-m-user')
+```
+
+## Overriding the default operators
+
+Each constraint type has a set of default operators, which you can customize by using the `operators()`method:
+
+```php
+use Filament\QueryBuilder\Constraints\Operators\IsFilledOperator;
+use Filament\QueryBuilder\Constraints\TextConstraint;
+
+TextConstraint::make('author.name')
+    ->operators([
+        IsFilledOperator::make(),
+    ])
+```
+
+This will remove all operators, and register the `EqualsOperator`.
+
+If you'd like to add an operator to the end of the list, use `pushOperators()` instead:
+
+```php
+use Filament\QueryBuilder\Constraints\Operators\IsFilledOperator;
+use Filament\QueryBuilder\Constraints\TextConstraint;
+
+TextConstraint::make('author.name')
+    ->pushOperators([
+        IsFilledOperator::class,
+    ])
+```
+
+If you'd like to add an operator to the start of the list, use `unshiftOperators()` instead:
+
+```php
+use Filament\QueryBuilder\Constraints\Operators\IsFilledOperator;
+use Filament\QueryBuilder\Constraints\TextConstraint;
+
+TextConstraint::make('author.name')
+    ->unshiftOperators([
+        IsFilledOperator::class,
+    ])
+```
+
+## Creating custom constraints
+
+Custom constraints can be created "inline" with other constraints using the `Constraint::make()` method. You should also pass an [icon](#customizing-the-constraint-icon) to the `icon()` method:
+
+```php
+use Filament\QueryBuilder\Constraints\Constraint;
+
+Constraint::make('subscribed')
+    ->icon('heroicon-m-bell')
+    ->operators([
+        // ...
+    ]),
+```
+
+If you want to customize the label of the constraint, you can use the `label()` method:
+
+```php
+use Filament\QueryBuilder\Constraints\Constraint;
+
+Constraint::make('subscribed')
+    ->label('Subscribed to updates')
+    ->icon('heroicon-m-bell')
+    ->operators([
+        // ...
+    ]),
+```
+
+Now, you must [define operators](#creating-custom-operators) for the constraint. These are options that you can pick from to filter the column. If the column is [nullable](#nullable-constraints), you can also register that built-in operator for your custom constraint:
+
+```php
+use Filament\QueryBuilder\Constraints\Constraint;
+use Filament\QueryBuilder\Constraints\Operators\IsFilledOperator;
+
+Constraint::make('subscribed')
+    ->label('Subscribed to updates')
+    ->icon('heroicon-m-bell')
+    ->operators([
+        // ...
+        IsFilledOperator::class,
+    ]),
+```
+
+### Creating custom operators
+
+Custom operators can be created using the `Operator::make()` method:
+
+```php
+use Filament\QueryBuilder\Constraints\Operators\Operator;
+
+Operator::make('subscribed')
+    ->label(fn (bool $isInverse): string => $isInverse ? 'Not subscribed' : 'Subscribed')
+    ->summary(fn (bool $isInverse): string => $isInverse ? 'You are not subscribed' : 'You are subscribed')
+    ->baseQuery(fn (Builder $query, bool $isInverse) => $query->{$isInverse ? 'whereDoesntHave' : 'whereHas'}(
+        'subscriptions.user',
+        fn (Builder $query) => $query->whereKey(auth()->user()),
+    )),
+```
+
+In this example, the operator is able to filter records based on whether or not the authenticated user is subscribed to the record. A subscription is recorded in the `subscriptions` relationship of the table.
+
+The `baseQuery()` method is used to define the query that will be used to filter the records. The `$isInverse` argument is `false` when the "Subscribed" option is selected, and `true` when the "Not subscribed" option is selected. The function is applied to the base query of the table, where `whereHas()` can be used. If your function does not need to be applied to the base query of the table, like when you are using a simple `where()` or `whereIn()`, you can use the `query()` method instead, which has the bonus of being able to be used inside nested "OR" groups.
+
+The `label()` method is used to render the options in the operator select. Two options are registered for each operator, one for when the operator is not inverted, and one for when it is inverted.
+
+The `summary()` method is used in the header of the constraint when it is applied to the query, to provide an overview of the active constraint.
+
+## Customizing the constraint picker
+
+### Changing the number of columns in the constraint picker
+
+The constraint picker has only 1 column. You may customize it by passing a number of columns to `constraintPickerColumns()`:
+
+```php
+use Filament\Tables\Filters\QueryBuilder;
+
+QueryBuilder::make()
+    ->constraintPickerColumns(2)
+    ->constraints([
+        // ...
+    ])
+```
+
+This method can be used in a couple of different ways:
+
+- You can pass an integer like `constraintPickerColumns(2)`. This integer is the number of columns used on the `lg` breakpoint and higher. All smaller devices will have just 1 column.
+- You can pass an array, where the key is the breakpoint and the value is the number of columns. For example, `constraintPickerColumns(['md' => 2, 'xl' => 4])` will create a 2 column layout on medium devices, and a 4 column layout on extra large devices. The default breakpoint for smaller devices uses 1 column, unless you use a `default` array key.
+
+Breakpoints (`sm`, `md`, `lg`, `xl`, `2xl`) are defined by Tailwind, and can be found in the [Tailwind documentation](https://tailwindcss.com/docs/responsive-design#overview).
+
+### Increasing the width of the constraint picker
+
+When you [increase the number of columns](#changing-the-number-of-columns-in-the-constraint-picker), the width of the dropdown should increase incrementally to handle the additional columns. If you'd like more control, you can manually set a maximum width for the dropdown using the `constraintPickerWidth()` method. Options correspond to [Tailwind's max-width scale](https://tailwindcss.com/docs/max-width). The options are `xs`, `sm`, `md`, `lg`, `xl`, `2xl`, `3xl`, `4xl`, `5xl`, `6xl`, `7xl`:
+
+```php
+use Filament\Tables\Filters\QueryBuilder;
+
+QueryBuilder::make()
+    ->constraintPickerColumns(3)
+    ->constraintPickerWidth('2xl')
+    ->constraints([
+        // ...
+    ])
+```
+
+
+
+---
+title: Custom filters
+---
+import AutoScreenshot from "@components/AutoScreenshot.astro"
+import UtilityInjection from "@components/UtilityInjection.astro"
+
+## Custom filter schemas
+
+You may use [schema components](../../schemas) to create custom filters. The data from the custom filter schema is available in the `$data` array of the `query()` callback:
+
+```php
+use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Filters\Filter;
+use Illuminate\Database\Eloquent\Builder;
+
+Filter::make('created_at')
+    ->schema([
+        DatePicker::make('created_from'),
+        DatePicker::make('created_until'),
+    ])
+    ->query(function (Builder $query, array $data): Builder {
+        return $query
+            ->when(
+                $data['created_from'],
+                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+            )
+            ->when(
+                $data['created_until'],
+                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+            );
+    })
+```
+
+<UtilityInjection set="formFields" version="5.x" extras="Query;;Illuminate\Database\Eloquent\Builder;;$query;;The Eloquent query builder to modify.||Data;;array<string, mixed>;;$data;;The data from the filter's form fields.">The `query()` function can inject various utilities into the function as parameters.</UtilityInjection>
+
+<AutoScreenshot name="tables/filters/custom-form" alt="Table with custom filter schema" version="5.x" />
+
+### Setting default values for custom filter fields
+
+To customize the default value of a field in a custom filter schema, you may use the `default()` method:
+
+```php
+use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Filters\Filter;
+
+Filter::make('created_at')
+    ->schema([
+        DatePicker::make('created_from'),
+        DatePicker::make('created_until')
+            ->default(now()),
+    ])
+```
+
+## Active indicators
+
+When a filter is active, an indicator is displayed above the table content to signal that the table query has been scoped.
+
+<AutoScreenshot name="tables/filters/indicators" alt="Table with filter indicators" version="5.x" />
+
+By default, the label of the filter is used as the indicator. You can override this using the `indicator()` method:
+
+```php
+use Filament\Tables\Filters\Filter;
+
+Filter::make('is_admin')
+    ->label('Administrators only?')
+    ->indicator('Administrators')
+```
+
+If you are using a [custom filter schema](#custom-filter-schemas), you should use [`indicateUsing()`](#custom-active-indicators) to display an active indicator.
+
+Please note: if you do not have an indicator for your filter, then the badge-count of how many filters are active in the table will not include that filter.
+
+### Custom active indicators
+
+Not all indicators are simple, so you may need to use `indicateUsing()` to customize which indicators should be shown at any time.
+
+For example, if you have a custom date filter, you may create a custom indicator that formats the selected date:
+
+```php
+use Carbon\Carbon;
+use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Filters\Filter;
+
+Filter::make('created_at')
+    ->schema([DatePicker::make('date')])
+    // ...
+    ->indicateUsing(function (array $data): ?string {
+        if (! $data['date']) {
+            return null;
+        }
+
+        return 'Created at ' . Carbon::parse($data['date'])->toFormattedDateString();
+    })
+```
+
+### Multiple active indicators
+
+You may even render multiple indicators at once, by returning an array of `Indicator` objects. If you have different fields associated with different indicators, you should set the field using the `removeField()` method on the `Indicator` object to ensure that the correct field is reset when the filter is removed:
+
+```php
+use Carbon\Carbon;
+use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\Indicator;
+
+Filter::make('created_at')
+    ->schema([
+        DatePicker::make('from'),
+        DatePicker::make('until'),
+    ])
+    // ...
+    ->indicateUsing(function (array $data): array {
+        $indicators = [];
+
+        if ($data['from'] ?? null) {
+            $indicators[] = Indicator::make('Created from ' . Carbon::parse($data['from'])->toFormattedDateString())
+                ->removeField('from');
+        }
+
+        if ($data['until'] ?? null) {
+            $indicators[] = Indicator::make('Created until ' . Carbon::parse($data['until'])->toFormattedDateString())
+                ->removeField('until');
+        }
+
+        return $indicators;
+    })
+```
+
+### Preventing indicators from being removed
+
+You can prevent users from removing an indicator using `removable(false)` on an `Indicator` object:
+
+```php
+use Carbon\Carbon;
+use Filament\Tables\Filters\Indicator;
+
+Indicator::make('Created from ' . Carbon::parse($data['from'])->toFormattedDateString())
+    ->removable(false)
+```
+
+
+---
+title: Filter layout
+---
+import AutoScreenshot from "@components/AutoScreenshot.astro"
+
+## Positioning filters into grid columns
+
+To change the number of columns that filters may occupy, you may use the `filtersFormColumns()` method:
+
+```php
+use Filament\Tables\Table;
+
+public function table(Table $table): Table
+{
+    return $table
+        ->filters([
+            // ...
+        ])
+        ->filtersFormColumns(3);
+}
+```
+
+## Controlling the width of the filters dropdown
+
+To customize the dropdown width, you may use the `filtersFormWidth()` method, and specify a width - `ExtraSmall`, `Small`, `Medium`, `Large`, `ExtraLarge`, `TwoExtraLarge`, `ThreeExtraLarge`, `FourExtraLarge`, `FiveExtraLarge`, `SixExtraLarge` or `SevenExtraLarge`. By default, the width is `ExtraSmall`:
+
+```php
+use Filament\Support\Enums\Width;
+use Filament\Tables\Table;
+
+public function table(Table $table): Table
+{
+    return $table
+        ->filters([
+            // ...
+        ])
+        ->filtersFormWidth(Width::FourExtraLarge);
+}
+```
+
+## Controlling the maximum height of the filters dropdown
+
+To add a maximum height to the filters' dropdown content, so that they scroll, you may use the `filtersFormMaxHeight()` method, passing a [CSS length](https://developer.mozilla.org/en-US/docs/Web/CSS/length):
+
+```php
+use Filament\Tables\Table;
+
+public function table(Table $table): Table
+{
+    return $table
+        ->filters([
+            // ...
+        ])
+        ->filtersFormMaxHeight('400px');
+}
+```
+
+## Displaying filters in a modal
+
+To render the filters in a modal instead of in a dropdown, you may use:
+
+```php
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Table;
+
+public function table(Table $table): Table
+{
+    return $table
+        ->filters([
+            // ...
+        ], layout: FiltersLayout::Modal);
+}
+```
+
+You may use the [trigger action API](overview#customizing-the-filters-trigger-action) to [customize the modal](../../actions/modals), including [using a `slideOver()`](../../actions/modals#using-a-slide-over-instead-of-a-modal).
+
+## Displaying filters above the table content
+
+To render the filters above the table content instead of in a dropdown, you may use:
+
+```php
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Table;
+
+public function table(Table $table): Table
+{
+    return $table
+        ->filters([
+            // ...
+        ], layout: FiltersLayout::AboveContent);
+}
+```
+
+<AutoScreenshot name="tables/filters/above-content" alt="Table with filters above content" version="5.x" />
+
+### Allowing filters above the table content to be collapsed
+
+To allow the filters above the table content to be collapsed, you may use:
+
+```php
+use Filament\Tables\Enums\FiltersLayout;
+
+public function table(Table $table): Table
+{
+    return $table
+        ->filters([
+            // ...
+        ], layout: FiltersLayout::AboveContentCollapsible);
+}
+```
+
+## Displaying filters below the table content
+
+To render the filters below the table content instead of in a dropdown, you may use:
+
+```php
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Table;
+
+public function table(Table $table): Table
+{
+    return $table
+        ->filters([
+            // ...
+        ], layout: FiltersLayout::BelowContent);
+}
+```
+
+<AutoScreenshot name="tables/filters/below-content" alt="Table with filters below content" version="5.x" />
+
+## Displaying filters to the left or right of the table content
+
+To render the filters to the left (before) or right (after) of the table content instead of in a dropdown, you may use:
+
+```php
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Table;
+
+public function table(Table $table): Table
+{
+    return $table
+        ->filters([
+            // ...
+        ], layout: FiltersLayout::BeforeContent); // or `FiltersLayout::AfterContent`
+}
+```
+
+### Allowing filters to be collapsible when displayed to the left or right of the table content
+
+To allow the filters to be collapsible when displayed to the left or right of the table content, you may use:
+
+```php
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Table;
+
+public function table(Table $table): Table
+{
+    return $table
+        ->filters([
+            // ...
+        ], layout: FiltersLayout::BeforeContentCollapsible); // or `FiltersLayout::AfterContentCollapsible`
+}
+```
+
+## Hiding the filter indicators
+
+To hide the active filters indicators above the table, you may use `hiddenFilterIndicators()`:
+
+```php
+use Filament\Tables\Table;
+
+public function table(Table $table): Table
+{
+    return $table
+        ->filters([
+            // ...
+        ])
+        ->hiddenFilterIndicators();
+}
+```
+
+## Customizing the filter form schema
+
+You may customize the [form schema](../../schemas/layouts) of the entire filter form at once, in order to rearrange filters into your desired layout, and use any of the [layout components](../../schemas/layouts) available to forms. To do this, use the `filterFormSchema()` method, passing a closure function that receives the array of defined `$filters` that you can insert:
+
+```php
+use Filament\Schemas\Components\Section;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Table;
+
+public function table(Table $table): Table
+{
+    return $table
+        ->filters([
+            Filter::make('is_featured'),
+            Filter::make('published_at'),
+            Filter::make('author'),
+        ])
+        ->filtersFormColumns(2)
+        ->filtersFormSchema(fn (array $filters): array => [
+            Section::make('Visibility')
+                ->description('These filters affect the visibility of the records in the table.')
+                ->schema([
+                    $filters['is_featured'],
+                    $filters['published_at'],
+                ])
+                    ->columns(2)
+                ->columnSpanFull(),
+            $filters['author'],
+        ]);
+}
+```
+
+In this example, we have put two of the filters inside a [section](../../schemas/sections) component, and used the `columns()` method to specify that the section should have two columns. We have also used the `columnSpanFull()` method to specify that the section should span the full width of the filter form, which is also 2 columns wide. We have inserted each filter into the form schema by using the filter's name as the key in the `$filters` array.
+
+## Displaying the reset action in the footer
+
+By default, the reset action appears in the header of the filters form. You may move it to the footer, next to the apply action, using the `filtersResetActionPosition()` method:
+
+```php
+use Filament\Tables\Enums\FiltersResetActionPosition;
+use Filament\Tables\Table;
+
+public function table(Table $table): Table
+{
+    return $table
+        ->filters([
+            // ...
+        ])
+        ->filtersResetActionPosition(FiltersResetActionPosition::Footer);
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

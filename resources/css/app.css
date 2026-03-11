@@ -1,0 +1,74 @@
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lora:wght@400;500;600;700&display=swap');
+
+/* Required by all Filament components */
+@import '../../vendor/filament/support/resources/css/index.css';
+@import '../../vendor/filament/actions/resources/css/index.css';
+@import '../../vendor/filament/forms/resources/css/index.css';
+@import '../../vendor/filament/infolists/resources/css/index.css';
+@import '../../vendor/filament/notifications/resources/css/index.css';
+@import '../../vendor/filament/schemas/resources/css/index.css';
+@import '../../vendor/filament/tables/resources/css/index.css';
+@import '../../vendor/filament/widgets/resources/css/index.css';
+
+@import "tailwindcss";
+
+@plugin "@tailwindcss/forms";
+@plugin "@tailwindcss/typography";
+
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --color-medico-azul-50: #e6f0ff;
+    --color-medico-azul-100: #b3d1ff;
+    --color-medico-azul-200: #80b3ff;
+    --color-medico-azul-300: #4d94ff;
+    --color-medico-azul-400: #1a75ff;
+    --color-medico-azul-500: #0066CC;
+    --color-medico-azul-600: #0052a3;
+    --color-medico-azul-700: #003d7a;
+    --color-medico-azul-800: #002952;
+    --color-medico-azul-900: #001429;
+
+    --color-medico-verde-50: #e6f7f0;
+    --color-medico-verde-100: #b3e8cc;
+    --color-medico-verde-200: #80d9a8;
+    --color-medico-verde-300: #4dca84;
+    --color-medico-verde-400: #1abb60;
+    --color-medico-verde-500: #00A86B;
+    --color-medico-verde-600: #008656;
+    --color-medico-verde-700: #006541;
+    --color-medico-verde-800: #00432b;
+    --color-medico-verde-900: #002216;
+
+    --color-clinico-blanco: #FAFCFE;
+    --color-clinico-gris: #F0F4F8;
+
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-serif: 'Lora', ui-serif, Georgia, serif;
+}
+
+[x-cloak] {
+    display: none;
+}
+
+/* Estilos base del tema médico */
+body {
+    font-family: var(--font-sans);
+    background-color: var(--color-clinico-blanco);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-serif);
+}
+
+/* Botones médicos personalizados */
+.btn-medico-primario {
+    @apply px-4 py-2 font-semibold text-white transition-colors duration-200 rounded-lg;
+    background-color: var(--color-medico-azul-500);
+}
+
+.btn-medico-secundario {
+    @apply px-4 py-2 font-semibold text-white transition-colors duration-200 rounded-lg;
+    background-color: var(--color-medico-verde-500);
+}

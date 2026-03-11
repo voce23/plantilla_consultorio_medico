@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lección 8.5: Paginación Estilizada</title>
+    <link rel="stylesheet" href="../micss/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
+</head>
+<body>
+<div class="leccion-contenedor">
+<article>
+
+<h1 class="leccion-titulo">Lección 8.5: Paginación Estilizada</h1>
+<h2>Tailwind pagination personalizada con colores médicos</h2>
+
+<!-- Analogía -->
+<div class="analogia-caja">
+    <strong>🎯 Piensa en esto:</strong> Imagina un libro de 500 páginas. No puedes mostrar todas las páginas a la vez, así que pones números en la parte inferior para que el lector pueda saltar a la página que quiera. La paginación web funciona igual: divide contenido largo en páginas manejables.
+</div>
+
+<!-- Paso 1 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">1</span>
+    <strong>Crear la vista de paginación personalizada</strong>
+    <p>Laravel usa vistas específicas para la paginación. Vamos a crear una con nuestros colores médicos.</p>
+    <p><strong>📍 Terminal:</strong></p>
+    <pre><code class="language-bash"># Crear la carpeta y archivo
+mkdir -p resources/views/vendor/pagination</code></pre>
+    <p style="color: #6b7280;">💡 Laravel busca primero en <code>resources/views/vendor</code> antes que en sus vistas internas.</p>
+</div>
+
+<!-- Micro-código destacado -->
+<div class="micro-codigo-destacado">
+    <h4>📝 ESTE ES EL CÓDIGO QUE VAMOS A APRENDER:</h4>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/vendor/pagination/tailwind-medico.blade.php</code></p>
+    <pre><code class="language-php">@if ($page == $paginator->currentPage())
+    &lt;span class="bg-medico-azul-500 text-white border-medico-azul-500"&gt;
+        {{ $page }}
+    &lt;/span&gt;
+@else
+    &lt;a href="{{ $url }}" class="hover:bg-medico-azul-50 hover:text-medico-azul-600"&gt;
+        {{ $page }}
+    &lt;/a&gt;
+@endif</code></pre>
+</div>
+
+<!-- Explicación línea por línea -->
+<h4>🔍 Vamos a entender línea por línea (como si fuera la primera vez):</h4>
+
+<div class="linea-explicacion">
+    <code>@if ($page == $paginator->currentPage())</code> 
+    <br>→ Verificamos si este número de página es la página actual. Si es así, lo mostramos destacado.
+</div>
+
+<div class="linea-explicacion">
+    <code>class="bg-medico-azul-500 text-white"</code> 
+    <br>→ La página actual tiene fondo azul médico y texto blanco para destacar visualmente.
+</div>
+
+<div class="linea-explicacion">
+    <code>class="hover:bg-medico-azul-50 hover:text-medico-azul-600"</code> 
+    <br>→ Las páginas no activas cambian de color suavemente cuando pasas el mouse por encima.
+</div>
+
+<div class="linea-explicacion">
+    <code>$paginator->hasMorePages()</code> 
+    <br>→ Una función que devuelve true si hay más páginas después de la actual. Usada para mostrar/ocultar el botón "Siguiente".
+</div>
+
+<!-- Paso 2 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">2</span>
+    <strong>La estructura completa de la paginación</strong>
+    <p>La paginación tiene tres partes: botón anterior, números de página, y botón siguiente.</p>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/vendor/pagination/tailwind-medico.blade.php</code></p>
+    <pre><code class="language-php">&lt;nav role="navigation"&gt;
+    {{-- Versión Mobile --}}
+    &lt;div class="flex justify-between sm:hidden"&gt;
+        &lt;a href="{{ $paginator->previousPageUrl() }}"&gt;← Anterior&lt;/a&gt;
+        &lt;a href="{{ $paginator->nextPageUrl() }}"&gt;Siguiente →&lt;/a&gt;
+    &lt;/div&gt;
+
+    {{-- Versión Desktop --}}
+    &lt;div class="hidden sm:flex"&gt;
+        {{-- Botón Anterior --}}
+        @if ($paginator->onFirstPage())
+            &lt;span&gt;←&lt;/span&gt;
+        @else
+            &lt;a href="{{ $paginator->previousPageUrl() }}"&gt;←&lt;/a&gt;
+        @endif
+
+        {{-- Números de página --}}
+        @foreach ($elements as $element)
+            {{-- ... números ... --}}
+        @endforeach
+
+        {{-- Botón Siguiente --}}
+        @if ($paginator->hasMorePages())
+            &lt;a href="{{ $paginator->nextPageUrl() }}"&gt;→&lt;/a&gt;
+        @else
+            &lt;span&gt;→&lt;/span&gt;
+        @endif
+    &lt;/div&gt;
+&lt;/nav&gt;</code></pre>
+    <p style="color: #6b7280;">💡 Tenemos dos versiones: una simple para móviles y otra completa para desktop.</p>
+</div>
+
+<!-- Paso 3 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">3</span>
+    <strong>Usar la paginación personalizada</strong>
+    <p>En tu controlador o vista, le indicas a Laravel que use tu vista personalizada.</p>
+    <p><strong>📍 Archivo:</strong> Controlador o Vista Blade</p>
+    <pre><code class="language-php">// En el controlador
+$articulos = Articulo::publicados()
+    ->paginate(9)
+    ->withQueryString();
+
+// En la vista Blade
+{{ $articulos->links('vendor.pagination.tailwind-medico') }}</code></pre>
+    <p style="color: #6b7280;">💡 <code>withQueryString()</code> mantiene los parámetros de búsqueda al cambiar de página.</p>
+</div>
+
+<!-- Paso 4 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">4</span>
+    <strong>Información de resultados</strong>
+    <p>Muestra "Mostrando X a Y de Z artículos" para que el usuario sepa dónde está.</p>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/vendor/pagination/tailwind-medico.blade.php</code></p>
+    <pre><code class="language-php">&lt;p&gt;
+    Mostrando 
+    &lt;span&gt;{{ $paginator->firstItem() }}&lt;/span&gt;
+    a
+    &lt;span&gt;{{ $paginator->lastItem() }}&lt;/span&gt;
+    de
+    &lt;span&gt;{{ $paginator->total() }}&lt;/span&gt;
+    artículos
+&lt;/p&gt;</code></pre>
+    <p style="color: #6b7280;">💡 Estos métodos del paginador calculan automáticamente los números correctos.</p>
+</div>
+
+<!-- Código completo colapsible -->
+<details class="codigo-completo">
+    <summary>📁 ¿Quieres ver el código completo de la paginación? (opcional)</summary>
+    <p style="color: #6b7280;">Esto es solo para que veas dónde va tu código. No necesitas memorizar todo esto:</p>
+    <pre><code class="language-php">@if ($paginator->hasPages())
+    &lt;nav role="navigation"&gt;
+        {{-- Mobile --}}
+        &lt;div class="flex justify-between sm:hidden"&gt;
+            @if ($paginator->onFirstPage())
+                &lt;span&gt;← Anterior&lt;/span&gt;
+            @else
+                &lt;a href="{{ $paginator->previousPageUrl() }}"&gt;← Anterior&lt;/a&gt;
+            @endif
+
+            @if ($paginator->hasMorePages())
+                &lt;a href="{{ $paginator->nextPageUrl() }}"&gt;Siguiente →&lt;/a&gt;
+            @else
+                &lt;span&gt;Siguiente →&lt;/span&gt;
+            @endif
+        &lt;/div&gt;
+
+        {{-- Desktop --}}
+        &lt;div class="hidden sm:flex"&gt;
+            &lt;span class="relative z-0 inline-flex shadow-sm rounded-xl"&gt;
+                {{-- Anterior --}}
+                @if ($paginator->onFirstPage())
+                    &lt;span aria-disabled="true"&gt;←&lt;/span&gt;
+                @else
+                    &lt;a href="{{ $paginator->previousPageUrl() }}"&gt;←&lt;/a&gt;
+                @endif
+
+                {{-- Páginas --}}
+                @foreach ($elements as $element)
+                    @if (is_string($element))
+                        &lt;span&gt;{{ $element }}&lt;/span&gt;
+                    @endif
+
+                    @if (is_array($element))
+                        @foreach ($element as $page => $url)
+                            @if ($page == $paginator->currentPage())
+                                &lt;span class="bg-medico-azul-500 text-white"&gt;{{ $page }}&lt;/span&gt;
+                            @else
+                                &lt;a href="{{ $url }}"&gt;{{ $page }}&lt;/a&gt;
+                            @endif
+                        @endforeach
+                    @endif
+                @endforeach
+
+                {{-- Siguiente --}}
+                @if ($paginator->hasMorePages())
+                    &lt;a href="{{ $paginator->nextPageUrl() }}"&gt;→&lt;/a&gt;
+                @else
+                    &lt;span aria-disabled="true"&gt;→&lt;/span&gt;
+                @endif
+            &lt;/span&gt;
+        &lt;/div&gt;
+    &lt;/nav&gt;
+@endif</code></pre>
+</details>
+
+<!-- Resumen -->
+<div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 0.5rem; padding: 1.5rem;">
+    <h4 style="color: #1e40af;">🎉 ¿Qué aprendimos hoy?</h4>
+    <ul>
+        <li>Laravel busca vistas de paginación en <code>resources/views/vendor/pagination</code></li>
+        <li>La paginación tiene versión mobile (simple) y desktop (completa)</li>
+        <li><code>$paginator->currentPage()</code> identifica la página activa para destacarla</li>
+        <li>Los colores médicos (<code>medico-azul-*</code>) mantienen la identidad visual</li>
+        <li><code>withQueryString()</code> preserva filtros al cambiar de página</li>
+    </ul>
+</div>
+
+<p style="font-size: 1.1rem;">¡Felicitaciones! Has completado el Módulo 8. Tu blog de salud está completo: CRUD en Filament, tabla profesional, template de artículo, sidebar funcional y paginación estilizada. ¡Nos vemos en el Módulo 9! 🎊</p>
+
+</article>
+</div>
+</body>
+</html>

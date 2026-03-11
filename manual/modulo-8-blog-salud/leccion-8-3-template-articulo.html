@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lección 8.3: Template de Artículo Individual</title>
+    <link rel="stylesheet" href="../micss/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
+</head>
+<body>
+<div class="leccion-contenedor">
+<article>
+
+<h1 class="leccion-titulo">Lección 8.3: Template de Artículo Individual</h1>
+<h2>Blade view con Hero, contenido formateado y compartir en redes</h2>
+
+<!-- Analogía -->
+<div class="analogia-caja">
+    <strong>🎯 Piensa en esto:</strong> Imagina abrir una revista: primero ves una foto grande con el título encima (eso es el Hero), luego lees el artículo con fotos y títulos bien formateados, y al final hay botones para compartirlo con tus amigos. Eso es exactamente lo que vamos a crear.
+</div>
+
+<!-- Paso 1 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">1</span>
+    <strong>Crear la estructura del Hero</strong>
+    <p>El Hero es la parte superior llamativa con la imagen de fondo y el título del artículo.</p>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/articulos/show.blade.php</code></p>
+    <pre><code class="language-html">&lt;section class="relative bg-medico-azul-900 text-white"&gt;
+    @if($articulo->imagen_destacada)
+        &lt;div class="absolute inset-0"&gt;
+            &lt;img src="{{ asset('storage/' . $articulo->imagen_destacada) }}" 
+                 class="w-full h-full object-cover opacity-30"&gt;
+            &lt;div class="absolute inset-0 bg-gradient-to-t from-medico-azul-900 ..."&gt;&lt;/div&gt;
+        &lt;/div&gt;
+    @endif
+    
+    &lt;div class="relative px-4 py-20 mx-auto max-w-7xl"&gt;
+        &lt;h1 class="text-3xl font-bold sm:text-4xl"&gt;{{ $articulo->titulo }}&lt;/h1&gt;
+    &lt;/div&gt;
+&lt;/section&gt;</code></pre>
+    <p style="color: #6b7280;">💡 <code>opacity-30</code> hace la imagen semi-transparente para que el texto se lea bien encima.</p>
+</div>
+
+<!-- Micro-código destacado -->
+<div class="micro-codigo-destacado">
+    <h4>📝 ESTE ES EL CÓDIGO QUE VAMOS A APRENDER:</h4>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/articulos/show.blade.php</code></p>
+    <pre><code class="language-html">&lt;article class="lg:col-span-2"&gt;
+    &lt;div class="prose prose-lg prose-medico max-w-none"&gt;
+        {!! $articulo->contenido !!}
+    &lt;/div&gt;
+&lt;/article&gt;
+
+&lt;aside class="lg:col-span-1"&gt;
+    &lt;x-blog-sidebar /&gt;
+&lt;/aside&gt;</code></pre>
+</div>
+
+<!-- Explicación línea por línea -->
+<h4>🔍 Vamos a entender línea por línea (como si fuera la primera vez):</h4>
+
+<div class="linea-explicacion">
+    <code>class="prose prose-lg prose-medico"</code> 
+    <br>→ <code>prose</code> es una clase de Tailwind que da estilos automáticos a contenido HTML (títulos, párrafos, listas). <code>prose-lg</code> lo hace más grande, y <code>prose-medico</code> son nuestros colores personalizados.
+</div>
+
+<div class="linea-explicacion">
+    <code>{!! $articulo->contenido !!}</code> 
+    <br>→ Las dobles exclamaciones <code>{!! !!}</code> le dicen a Blade: "No escapes el HTML, muéstralo tal cual". Esto es necesario porque el contenido tiene etiquetas HTML del MarkdownEditor.
+</div>
+
+<div class="linea-explicacion">
+    <code>&lt;x-blog-sidebar /&gt;</code> 
+    <br>→ Incluimos el componente del sidebar que creamos. Es como pegar todo ese código aquí, pero organizado.
+</div>
+
+<div class="linea-explicacion">
+    <code>class="lg:col-span-2"</code> y <code>class="lg:col-span-1"</code>
+    <br>→ En pantallas grandes (lg), el artículo ocupa 2/3 del ancho y el sidebar 1/3. Es una proporción clásica de blogs.
+</div>
+
+<!-- Paso 2 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">2</span>
+    <strong>Botones para compartir en redes sociales</strong>
+    <p>Cada red social tiene su propia URL para compartir. Fíjate cómo construimos los enlaces.</p>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/articulos/show.blade.php</code></p>
+    <pre><code class="language-html">&lt;a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(request()->url()) }}"&gt;
+    Facebook
+&lt;/a&gt;
+
+&lt;a href="https://twitter.com/intent/tweet?url={{ urlencode(request()->url()) }}&text={{ urlencode($articulo->titulo) }}"&gt;
+    Twitter
+&lt;/a&gt;
+
+&lt;a href="https://wa.me/?text={{ urlencode($articulo->titulo . ' ' . request()->url()) }}"&gt;
+    WhatsApp
+&lt;/a&gt;</code></pre>
+    <p style="color: #6b7280;">💡 <code>urlencode()</code> convierte espacios y caracteres especiales en formato URL seguro.</p>
+</div>
+
+<!-- Paso 3 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">3</span>
+    <strong>Mostrar artículos relacionados</strong>
+    <p>Al final del artículo, mostramos otros artículos de la misma categoría para mantener al lector en el sitio.</p>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/articulos/show.blade.php</code></p>
+    <pre><code class="language-html">@if($relacionados->count() > 0)
+    &lt;section class="py-16 bg-clinico-gris"&gt;
+        &lt;h2&gt;Artículos relacionados&lt;/h2&gt;
+        &lt;div class="grid grid-cols-1 md:grid-cols-3 gap-8"&gt;
+            @foreach($relacionados as $relacionado)
+                &lt;article&gt;
+                    &lt;img src="{{ asset('storage/' . $relacionado->imagen_destacada) }}"&gt;
+                    &lt;h3&gt;{{ $relacionado->titulo }}&lt;/h3&gt;
+                &lt;/article&gt;
+            @endforeach
+        &lt;/div&gt;
+    &lt;/section&gt;
+@endif</code></pre>
+    <p style="color: #6b7280;">💡 El <code>@if</code> evita mostrar la sección si no hay artículos relacionados.</p>
+</div>
+
+<!-- Código completo colapsible -->
+<details class="codigo-completo">
+    <summary>📁 ¿Quieres ver el código completo del template? (opcional)</summary>
+    <p style="color: #6b7280;">Esto es solo para que veas dónde va tu código. No necesitas memorizar todo esto:</p>
+    <pre><code class="language-php">&lt;x-app-layout&gt;
+    &lt;!-- Hero --&gt;
+    &lt;section class="relative bg-medico-azul-900 text-white"&gt;
+        &lt;!-- Imagen de fondo con overlay --&gt;
+        @if($articulo->imagen_destacada)
+            &lt;div class="absolute inset-0"&gt;
+                &lt;img src="{{ asset('storage/' . $articulo->imagen_destacada) }}" 
+                     class="w-full h-full object-cover opacity-30"&gt;
+                &lt;div class="absolute inset-0 bg-gradient-to-t from-medico-azul-900 ..."&gt;&lt;/div&gt;
+            &lt;/div&gt;
+        @endif
+        
+        &lt;div class="relative px-4 py-20 mx-auto max-w-7xl"&gt;
+            &lt;div class="max-w-3xl mx-auto text-center"&gt;
+                &lt;!-- Categoría --&gt;
+                &lt;a href="{{ route('blog.categoria', $articulo->categoria->slug) }}"&gt;
+                    {{ $articulo->categoria->nombre }}
+                &lt;/a&gt;
+                
+                &lt;h1&gt;{{ $articulo->titulo }}&lt;/h1&gt;
+                
+                &lt;!-- Meta: fecha, lectura, visitas --&gt;
+                &lt;div&gt;
+                    &lt;span&gt;{{ $articulo->fecha_publicacion->format('d M, Y') }}&lt;/span&gt;
+                    &lt;span&gt;{{ $articulo->tiempo_lectura }} min de lectura&lt;/span&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;!-- Contenido + Sidebar --&gt;
+    &lt;section class="py-12 bg-white"&gt;
+        &lt;div class="grid grid-cols-1 lg:grid-cols-3 gap-12"&gt;
+            &lt;article class="lg:col-span-2"&gt;
+                &lt;div class="prose prose-lg prose-medico"&gt;
+                    {!! $articulo->contenido !!}
+                &lt;/div&gt;
+                
+                &lt;!-- Compartir --&gt;
+                &lt;div&gt;
+                    &lt;h3&gt;Compartir&lt;/h3&gt;
+                    &lt;!-- Botones de redes --&gt;
+                &lt;/div&gt;
+            &lt;/article&gt;
+            
+            &lt;aside class="lg:col-span-1"&gt;
+                &lt;x-blog-sidebar /&gt;
+            &lt;/aside&gt;
+        &lt;/div&gt;
+    &lt;/section&gt;
+&lt;/x-app-layout&gt;</code></pre>
+</details>
+
+<!-- Resumen -->
+<div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 0.5rem; padding: 1.5rem;">
+    <h4 style="color: #1e40af;">🎉 ¿Qué aprendimos hoy?</h4>
+    <ul>
+        <li>El Hero con imagen de fondo y gradiente crea un impacto visual profesional</li>
+        <li><code>prose</code> de Tailwind formatea automáticamente el contenido HTML</li>
+        <li><code>{!! !!}</code> muestra HTML sin escapar (necesario para contenido enriquecido)</li>
+        <li>Los botones de compartir usan URLs específicas de cada red social</li>
+        <li>Los artículos relacionados mantienen al lector navegando en el sitio</li>
+    </ul>
+</div>
+
+<p style="font-size: 1.1rem;">¡Tu página de artículo ya se ve increíble! Ahora vamos a crear el sidebar con todas sus funcionalidades. ¡Nos vemos en la siguiente! 📄</p>
+
+</article>
+</div>
+</body>
+</html>

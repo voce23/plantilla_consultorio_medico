@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lección 7.4: Widget de Google Reviews</title>
+    <link rel="stylesheet" href="../micss/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+</head>
+<body>
+<div class="leccion-contenedor">
+<article>
+
+<h1 class="leccion-titulo">Lección 7.4: Widget de Google Reviews</h1>
+<h2>Componente Blade con estrellas y promedio estático</h2>
+
+<!-- Analogía -->
+<div class="analogia-caja">
+    <strong>🎯 Piensa en esto:</strong> Imagina que entras a un restaurante y ves un certificado enmarcado en la pared que dice "4.8 estrellas - 500 reseñas en Google". Inmediatamente sientes más confianza para pedir tu comida, ¿verdad? Ese certificado es social proof: la evidencia de que otros ya confiaron y quedaron satisfechos. Este widget es exactamente eso, pero para tu clínica.
+</div>
+
+<!-- Paso 1 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">1</span>
+    <strong>Crear el componente Blade</strong>
+    <p>Vamos a crear un componente que muestre el promedio de reseñas, las estrellas visuales y un botón para que los visitantes dejen su propia reseña.</p>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/components/google-reviews-widget.blade.php</code></p>
+    <pre><code class="language-bash"># Creamos el archivo directamente</code></pre>
+    <p style="color: #6b7280;">💡 Este es un componente "presentacional": solo muestra datos, no tiene lógica compleja.</p>
+</div>
+
+<!-- Paso 2 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">2</span>
+    <strong>Definir las props con valores por defecto</strong>
+    <p>Queremos que sea fácil de usar, con valores realistas por defecto que el usuario pueda cambiar si quiere.</p>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/components/google-reviews-widget.blade.php</code></p>
+    <pre><code class="language-php">@props([
+    'promedio' => 4.8,
+    'totalResenas' => 127,
+    'enlaceGoogle' => '#',
+])</code></pre>
+    <p style="color: #6b7280;">💡 El <code>#</code> es un placeholder. En producción, pondrías el enlace real a tu perfil de Google Business.</p>
+</div>
+
+<!-- Micro-código destacado -->
+<div class="micro-codigo-destacado">
+    <h4>📝 ESTE ES EL CÓDIGO QUE VAMOS A APRENDER:</h4>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/components/google-reviews-widget.blade.php</code></p>
+    <pre><code class="language-html">@for($i = 1; $i <= 5; $i++)
+    @if($i <= floor($promedio))
+        &lt;!-- Estrella completa --&gt;
+        &lt;svg class="w-6 h-6 text-yellow-400" fill="currentColor"&gt;
+            &lt;path d="M9.049 2.927..."/&gt;
+        &lt;/svg&gt;
+    @elseif($i == ceil($promedio) && $promedio != floor($promedio))
+        &lt;!-- Media estrella --&gt;
+        &lt;svg class="w-6 h-6"&gt;
+            &lt;defs&gt;
+                &lt;linearGradient id="half-{{ $i }}"&gt;
+                    &lt;stop offset="50%" stop-color="#FBBF24"/&gt;
+                    &lt;stop offset="50%" stop-color="#D1D5DB"/&gt;
+                &lt;/linearGradient&gt;
+            &lt;/defs&gt;
+            &lt;path fill="url(#half-{{ $i }})" d="M9.049 2.927..."/&gt;
+        &lt;/svg&gt;
+    @else
+        &lt;!-- Estrella vacía --&gt;
+        &lt;svg class="w-6 h-6 text-gray-300" fill="currentColor"&gt;
+            &lt;path d="M9.049 2.927..."/&gt;
+        &lt;/svg&gt;
+    @endif
+@endfor</code></pre>
+</div>
+
+<!-- Explicación línea por línea -->
+<h4>🔍 Vamos a entender línea por línea (como si fuera la primera vez):</h4>
+
+<div class="linea-explicacion">
+    <code>@for($i = 1; $i <= 5; $i++)</code> 
+    <br>→ Un bucle que se repite 5 veces (una por cada estrella). La variable <code>$i</code> va del 1 al 5.
+</div>
+
+<div class="linea-explicacion">
+    <code>@if($i <= floor($promedio))</code> 
+    <br>→ Si el número de estrella es menor o igual al promedio redondeado hacia abajo, pintamos una estrella completa dorada. Por ejemplo, si el promedio es 4.8, las estrellas 1, 2, 3 y 4 son completas.
+</div>
+
+<div class="linea-explicacion">
+    <code>@elseif($i == ceil($promedio) && $promedio != floor($promedio))</code> 
+    <br>→ Aquí está el truco de la media estrella: si estamos en la estrella que coincide con el promedio redondeado hacia arriba, Y el promedio no es un número entero, mostramos media estrella. Para 4.8, <code>ceil(4.8)</code> es 5, así que la estrella 5 es media.
+</div>
+
+<div class="linea-explicacion">
+    <code>&lt;linearGradient id="half-{{ $i }}"&gt;</code> 
+    <br>→ Creamos un degradado que va de amarillo (50%) a gris (50%). Esto simula una estrella medio pintada. Cada estrella necesita su propio ID único.
+</div>
+
+<div class="linea-explicacion">
+    <code>@else</code> 
+    <br>→ Si no es estrella completa ni media, es una estrella vacía gris. Estas son las estrellas "sobrantes" si el promedio es bajo.
+</div>
+
+<!-- Paso 3 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">3</span>
+    <strong>La barra de distribución de estrellas</strong>
+    <p>Google muestra barras que indican cuántas reseñas de cada tipo (5 estrellas, 4 estrellas, etc.) tiene el negocio.</p>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/components/google-reviews-widget.blade.php</code></p>
+    <pre><code class="language-html">@foreach([5, 4, 3, 2, 1] as $estrella)
+    @php
+        $porcentaje = match($estrella) {
+            5 => 75, 4 => 15, 3 => 5, 2 => 3, 1 => 2,
+            default => 0
+        };
+    @endphp
+    &lt;div class="flex items-center gap-3"&gt;
+        &lt;span&gt;{{ $estrella }} estrellas&lt;/span&gt;
+        &lt;div class="flex-1 h-3 bg-gray-100 rounded-full"&gt;
+            &lt;div class="h-full bg-yellow-400 rounded-full" 
+                 style="width: {{ $porcentaje }}%"&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;span&gt;{{ $porcentaje }}%&lt;/span&gt;
+    &lt;/div&gt;
+@endforeach</code></pre>
+    <p style="color: #6b7280;">💡 El <code>match</code> de PHP 8 es como un switch más limpio. Asigna un porcentaje según la cantidad de estrellas.</p>
+</div>
+
+<!-- Paso 4 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">4</span>
+    <strong>El logo de Google en SVG</strong>
+    <p>Para que se vea auténtico, incluimos el logo de Google hecho con SVG (gráficos vectoriales).</p>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/components/google-reviews-widget.blade.php</code></p>
+    <pre><code class="language-html">&lt;svg class="w-10 h-10" viewBox="0 0 24 24"&gt;
+    &lt;path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37..."/&gt;
+    &lt;path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66..."/&gt;
+    &lt;path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43..."/&gt;
+    &lt;path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09..."/&gt;
+&lt;/svg&gt;</code></pre>
+    <p style="color: #6b7280;">💡 SVG es perfecto para logos porque se ve nítido a cualquier tamaño y pesa muy poco.</p>
+</div>
+
+<!-- Paso 5 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">5</span>
+    <strong>Usar el widget en tu página</strong>
+    <p>Es tan fácil como usar cualquier etiqueta HTML, pero con datos personalizados.</p>
+    <p><strong>📍 Archivo:</strong> Cualquier vista Blade</p>
+    <pre><code class="language-html">&lt;!-- Con valores por defecto --&gt;
+&lt;x-google-reviews-widget /&gt;
+
+&lt;!-- Con valores personalizados --&gt;
+&lt;x-google-reviews-widget 
+    promedio="4.9"
+    :total-resenas="156"
+    enlace-google="https://g.page/r/..."
+/&gt;</code></pre>
+    <p style="color: #6b7280;">💡 Fíjate que <code>:total-resenas</code> tiene dos puntos porque es un número, no un string.</p>
+</div>
+
+<!-- Código completo colapsible -->
+<details class="codigo-completo">
+    <summary>📁 ¿Quieres ver el código completo del widget? (opcional)</summary>
+    <p style="color: #6b7280;">Esto es solo para que veas dónde va tu código. No necesitas memorizar todo esto:</p>
+    <pre><code class="language-php">&lt;!-- Google Reviews Widget --&gt;
+&lt;!-- 📁 Archivo: resources/views/components/google-reviews-widget.blade.php --&gt;
+
+@props([
+    'promedio' => 4.8,
+    'totalResenas' => 127,
+    'enlaceGoogle' => '#',
+])
+
+&lt;section class="py-16 bg-white"&gt;
+    &lt;div class="px-4 mx-auto max-w-4xl"&gt;
+        &lt;div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 md:p-12"&gt;
+            &lt;div class="flex flex-col md:flex-row items-center justify-between gap-8"&gt;
+                
+                &lt;!-- Logo y título --&gt;
+                &lt;div class="flex items-center gap-4"&gt;
+                    &lt;div class="w-16 h-16 bg-white rounded-xl shadow-md flex items-center justify-center"&gt;
+                        &lt;svg class="w-10 h-10" viewBox="0 0 24 24"&gt;
+                            &lt;!-- Paths del logo de Google --&gt;
+                        &lt;/svg&gt;
+                    &lt;/div&gt;
+                    &lt;div&gt;
+                        &lt;h3 class="text-xl font-bold text-gray-900"&gt;Google Reviews&lt;/h3&gt;
+                        &lt;p class="text-gray-500 text-sm"&gt;Opiniones verificadas&lt;/p&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+
+                &lt;!-- Calificación --&gt;
+                &lt;div class="text-center md:text-left"&gt;
+                    &lt;div class="flex items-center gap-2"&gt;
+                        &lt;span class="text-5xl font-bold text-gray-900"&gt;{{ $promedio }}&lt;/span&gt;
+                        &lt;span class="text-2xl text-gray-400"&gt;/5&lt;/span&gt;
+                    &lt;/div&gt;
+                    &lt;div class="flex gap-1 mt-2"&gt;
+                        &lt;!-- Estrellas generadas con el bucle @for --&gt;
+                    &lt;/div&gt;
+                    &lt;p class="text-gray-500 mt-1"&gt;Basado en {{ $totalResenas }} reseñas&lt;/p&gt;
+                &lt;/div&gt;
+
+                &lt;!-- Botón CTA --&gt;
+                &lt;a href="{{ $enlaceGoogle }}" target="_blank"
+                   class="inline-flex items-center gap-2 px-6 py-3 bg-medico-azul-500 text-white rounded-xl"&gt;
+                    Escribir reseña
+                &lt;/a&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/section&gt;</code></pre>
+</details>
+
+<!-- Resumen -->
+<div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 0.5rem; padding: 1.5rem;">
+    <h4 style="color: #1e40af;">🎉 ¿Qué aprendimos hoy?</h4>
+    <ul>
+        <li>El "social proof" (prueba social) aumenta la confianza de los visitantes</li>
+        <li>Las estrellas se renderizan con lógica condicional: completas, medias o vacías según el promedio</li>
+        <li><code>linearGradient</code> en SVG permite crear la ilusión de media estrella pintada</li>
+        <li>Las barras de distribución dan credibilidad mostrando el desglose de calificaciones</li>
+        <li>Los componentes Blade con props hacen que sea fácil reutilizar y personalizar el widget</li>
+    </ul>
+</div>
+
+<p style="font-size: 1.1rem;">¡Felicitaciones! Has completado el Módulo 7. Ahora tienes un sistema completo de testimonios que genera confianza en tus visitantes: el CRUD en Filament para gestionarlos, el carrusel para mostrarlos, el contador de estadísticas para impresionar, y el widget de Google Reviews para el social proof. ¡Nos vemos en el Módulo 8! 🎊</p>
+
+</article>
+</div>
+</body>
+</html>

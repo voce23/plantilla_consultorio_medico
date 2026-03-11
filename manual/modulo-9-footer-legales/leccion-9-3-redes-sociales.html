@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lección 9.3: Iconos de Redes Sociales</title>
+    <link rel="stylesheet" href="../micss/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
+</head>
+<body>
+<div class="leccion-contenedor">
+<article>
+
+<h1 class="leccion-titulo">Lección 9.3: Iconos de Redes Sociales</h1>
+<h2>Componente Blade con SVG inline + hover colors</h2>
+
+<!-- Analogía -->
+<div class="analogia-caja">
+    <strong>🎯 Piensa en esto:</strong> Imagina que tienes tarjetas de presentación de diferentes colores, una para cada red social. Cuando alguien te pide tu contacto, le das la tarjeta correspondiente. En tu sitio web, estos iconos son como esas tarjetas: cada uno lleva a una red social diferente y cambia de color cuando el usuario pasa el mouse.
+</div>
+
+<!-- Paso 1 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">1</span>
+    <strong>Crear el componente con props configurables</strong>
+    <p>Cada red social es opcional. Si no pasas una URL, el icono no aparece.</p>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/components/redes-sociales.blade.php</code></p>
+    <pre><code class="language-php">@props([
+    'class' => '',
+    'facebook' => '#',
+    'twitter' => '#',
+    'instagram' => '#',
+    'linkedin' => '#',
+    'youtube' => null,    // Opcional
+    'whatsapp' => null,   // Opcional
+    'tamaño' => 'md',     // sm, md, lg
+])</code></pre>
+    <p style="color: #6b7280;">💡 <code>null</code> significa que el icono no se muestra a menos que pases una URL.</p>
+</div>
+
+<!-- Micro-código destacado -->
+<div class="micro-codigo-destacado">
+    <h4>📝 ESTE ES EL CÓDIGO QUE VAMOS A APRENDER:</h4>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/components/redes-sociales.blade.php</code></p>
+    <pre><code class="language-html">&lt;!-- Facebook con hover azul --&gt;
+&lt;a 
+    href="{{ $facebook }}"
+    target="_blank"
+    rel="noopener noreferrer"
+    class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center 
+           text-white hover:bg-[#1877F2] transition-all duration-300"
+    aria-label="Facebook"
+&gt;
+    &lt;svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"&gt;
+        &lt;path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12..."/&gt;
+    &lt;/svg&gt;
+&lt;/a&gt;</code></pre>
+</div>
+
+<!-- Explicación línea por línea -->
+<h4>🔍 Vamos a entender línea por línea (como si fuera la primera vez):</h4>
+
+<div class="linea-explicacion">
+    <code>target="_blank"</code> 
+    <br>→ Abre el link en una nueva pestaña para que el usuario no abandone tu sitio.
+</div>
+
+<div class="linea-explicacion">
+    <code>rel="noopener noreferrer"</code> 
+    <br>→ Medida de seguridad importante cuando usas <code>target="_blank"</code>. Evita que la página externa acceda a tu ventana.
+</div>
+
+<div class="linea-explicacion">
+    <code>bg-white/10</code> 
+    <br>→ Fondo blanco con 10% de opacidad. Se ve bien sobre fondos oscuros y el hover resalta más.
+</div>
+
+<div class="linea-explicacion">
+    <code>hover:bg-[#1877F2]</code> 
+    <br>→ El color azul oficial de Facebook (usando su código HEX exacto). Cada red tiene su color.
+</div>
+
+<div class="linea-explicacion">
+    <code>transition-all duration-300</code> 
+    <br>→ La animación dura 300ms y suaviza el cambio de color. Sin esto, el cambio sería brusco.
+</div>
+
+<div class="linea-explicacion">
+    <code>aria-label="Facebook"</code> 
+    <br>→ Ayuda a los lectores de pantalla a describir el icono para personas con discapacidad visual.
+</div>
+
+<!-- Paso 2 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">2</span>
+    <strong>SVG inline vs imágenes externas</strong>
+    <p>Usamos SVG inline en lugar de imágenes PNG/JPG por varias razones:</p>
+    <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
+        <li><strong>Escalables:</strong> Se ven nítidos en cualquier tamaño</li>
+        <li><strong>Coloreables:</strong> Podemos cambiar el color con CSS (<code>fill="currentColor"</code>)</li>
+        <li><strong>Ligeros:</strong> Un SVG pesa menos que una imagen</li>
+        <li><strong>Sin requests extra:</strong> No necesitan descargarse del servidor</li>
+    </ul>
+</div>
+
+<!-- Paso 3 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">3</span>
+    <strong>Colores de hover por red social</strong>
+    <p>Cada red tiene su color oficial. Aquí están los códigos HEX:</p>
+    <pre><code class="language-html">Facebook:  #1877F2 (azul)
+Twitter:   #1DA1F2 (azul claro)
+Instagram: gradiente #833AB4 → #FD1D1D → #F77737
+LinkedIn:  #0A66C2 (azul corporativo)
+YouTube:   #FF0000 (rojo)
+WhatsApp:  #25D366 (verde)</code></pre>
+    <p style="color: #6b7280;">💡 Instagram usa <code>hover:bg-gradient-to-br</code> para crear el degradé característico.</p>
+</div>
+
+<!-- Paso 4 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">4</span>
+    <strong>Tamaños disponibles</strong>
+    <p>El componente permite 3 tamaños mediante un array asociativo:</p>
+    <pre><code class="language-php">@php
+$tamaños = [
+    'sm' => 'w-8 h-8',   // 32px - Para headers compactos
+    'md' => 'w-10 h-10', // 40px - Tamaño por defecto
+    'lg' => 'w-12 h-12', // 48px - Para destacar
+];
+$iconoTamaño = $tamaños[$tamaño] ?? $tamaños['md'];
+@endphp</code></pre>
+    <p style="color: #6b7280;">💡 El operador <code>??</code> (null coalescing) usa 'md' si el tamaño no existe.</p>
+</div>
+
+<!-- Paso 5 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">5</span>
+    <strong>WhatsApp con formato especial</strong>
+    <p>WhatsApp necesita un formato especial para abrir la app directamente:</p>
+    <pre><code class="language-php">@if($whatsapp)
+    &lt;a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $whatsapp) }}"&gt;
+        {{-- Icono de WhatsApp --}}
+    &lt;/a&gt;
+@endif</code></pre>
+    <p style="color: #6b7280;">💡 <code>preg_replace('/[^0-9]/', '', $whatsapp)</code> elimina espacios, guiones y paréntesis, dejando solo números.</p>
+</div>
+
+<!-- Paso 6 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">6</span>
+    <strong>Usar el componente</strong>
+    <p>Es muy sencillo incluirlo en cualquier vista:</p>
+    <p><strong>📍 Archivo:</strong> Cualquier vista Blade</p>
+    <pre><code class="language-html">&lt;!-- En el footer con todas las redes --&gt;
+&lt;x-redes-sociales 
+    facebook="https://facebook.com/clinica"
+    instagram="https://instagram.com/clinica"
+    linkedin="https://linkedin.com/company/clinica"
+    whatsapp="+52 123 456 7890"
+    tamaño="md"
+/&gt;
+
+&lt;!-- En el header solo con las principales --&gt;
+&lt;x-redes-sociales 
+    facebook="https://facebook.com/clinica"
+    twitter="https://twitter.com/clinica"
+    tamaño="sm"
+    class="ml-auto"
+/&gt;</code></pre>
+    <p style="color: #6b7280;">💡 La prop <code>class</code> permite añadir clases adicionales como márgenes o alineación.</p>
+</div>
+
+<!-- Resumen -->
+<div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 0.5rem; padding: 1.5rem;">
+    <h4 style="color: #1e40af;">🎉 ¿Qué aprendimos hoy?</h4>
+    <ul>
+        <li>SVG inline es mejor que imágenes porque es escalable y coloreable</li>
+        <li><code>currentColor</code> permite que el SVG herede el color del texto</li>
+        <li>Cada red social tiene su color oficial HEX para el hover</li>
+        <li><code>rel="noopener noreferrer"</code> es obligatorio con <code>target="_blank"</code></li>
+        <li>WhatsApp usa <code>wa.me</code> para abrir directamente la app</li>
+        <li>Las props con <code>null</code> permiten iconos opcionales</li>
+    </ul>
+</div>
+
+<p style="font-size: 1.1rem;">¡Los iconos están listos! Ahora vamos a crear la página de política de privacidad con navegación sticky. ¡Nos vemos en la siguiente! 🎨</p>
+
+</article>
+</div>
+</body>
+</html>

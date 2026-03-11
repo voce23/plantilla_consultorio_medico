@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lección 6.6 - Integración WhatsApp</title>
+    <link rel="stylesheet" href="../micss/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
+</head>
+<body>
+<div class="leccion-contenedor">
+<article>
+
+<h1 class="leccion-titulo">Lección 6.6: Integración WhatsApp</h1>
+<h2>Botón dinámico con https://wa.me/ + datos del formulario</h2>
+
+<div class="analogia-caja">
+    <strong>🎯 Piensa en esto:</strong> Es como tener un botón mágico que, al hacer clic, abre WhatsApp con un mensaje pre-escrito con todos los datos de tu cita. El paciente solo tiene que dar "Enviar". ¡Cero fricción!
+</div>
+
+<div class="tarjeta-paso">
+    <span class="paso-numero">1</span>
+    <strong>Crear el componente del botón</strong>
+    <p>Vamos a hacer un componente reutilizable que genere enlaces de WhatsApp dinámicos.</p>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/components/boton-whatsapp.blade.php</code></p>
+    <pre><code class="language-php">@props([
+    'telefono' => null,
+    'mensaje' => null,
+    'cita' => null,
+    'tipo' => 'boton', // 'boton', 'flotante', 'link'
+    'texto' => 'Contactar por WhatsApp',
+])</code></pre>
+    <p style="color: #6b7280;">💡 El componente acepta un array <code>cita</code> y automáticamente genera un mensaje profesional.</p>
+</div>
+
+<div class="tarjeta-paso">
+    <span class="paso-numero">2</span>
+    <strong>Generar el mensaje automáticamente</strong>
+    <p>Si pasamos los datos de la cita, el componente crea un mensaje formateado con emojis.</p>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/components/boton-whatsapp.blade.php</code></p>
+    <pre><code class="language-php">@php
+if ($cita && !$mensaje) {
+    $mensaje = "¡Hola! 👋\n\n";
+    $mensaje .= "Solicito información sobre una cita médica:\n\n";
+    
+    if (isset($cita['paciente_nombre'])) {
+        $mensaje .= "👤 *Paciente:* " . $cita['paciente_nombre'] . "\n";
+    }
+    
+    if (isset($cita['doctor_nombre'])) {
+        $mensaje .= "🩺 *Doctor:* " . $cita['doctor_nombre'] . "\n";
+    }
+    
+    if (isset($cita['fecha'])) {
+        $mensaje .= "📅 *Fecha:* " . $cita['fecha'] . "\n";
+    }
+    
+    $mensaje .= "\n¿Podrían confirmarme? ¡Gracias! 🙏";
+}</code></pre>
+</div>
+
+<div class="micro-codigo-destacado">
+    <h4>📝 ESTE ES EL CÓDIGO QUE VAMOS A APRENDER:</h4>
+    <p><strong>📍 Archivo:</strong> <code>resources/views/components/boton-whatsapp.blade.php</code></p>
+    <pre><code class="language-php">@php
+// Limpiar el número (quitar espacios, guiones, etc.)
+$numeroLimpio = preg_replace('/[^0-9]/', '', $telefono);
+
+// Codificar el mensaje para URL
+$mensajeCodificado = urlencode($mensaje);
+
+// URL de WhatsApp
+$urlWhatsApp = "https://wa.me/{$numeroLimpio}?text={$mensajeCodificado}";
+@endphp
+
+&lt;a href="{{ $urlWhatsApp }}" target="_blank" rel="noopener noreferrer"&gt;
+    {{ $texto }}
+&lt;/a&gt;</code></pre>
+</div>
+
+<h4>🔍 Vamos a entender línea por línea:</h4>
+
+<div class="linea-explicacion">
+    <code>preg_replace('/[^0-9]/', '', $telefono)</code>
+    <br>→ Expresión regular que elimina todo lo que no sea número. "+51 999-888-777" → "51999888777". WhatsApp necesita el número limpio.
+</div>
+
+<div class="linea-explicacion">
+    <code>urlencode($mensaje)</code>
+    <br>→ Convierte caracteres especiales a formato URL. Los espacios se vuelven %20, los saltos de línea %0A, etc.
+</div>
+
+<div class="linea-explicacion">
+    <code>https://wa.me/{$numero}?text={$mensaje}</code>
+    <br>→ URL oficial de WhatsApp Click to Chat. Al abrirla, WhatsApp web o app se abre con el mensaje listo.
+</div>
+
+<div class="linea-explicacion">
+    <code>target="_blank" rel="noopener noreferrer"</code>
+    <br>→ Abre en nueva pestaña de forma segura. <code>noopener</code> evita que la página nueva acceda a la ventana original.
+</div>
+
+<div class="tabla-visual">
+    <h4>📊 Tipos de botón disponibles:</h4>
+    <table>
+        <tr><th>Tipo</th><th>Uso</th><th>Apariencia</th></tr>
+        <tr><td class="celda-destacada">boton</td><td>Formularios</td><td>Botón verde estándar</td></tr>
+        <tr><td>flotante</td><td>Esquina de página</td><td>Círculo fijo abajo a la derecha</td></tr>
+        <tr><td>link</td><td>Texto en párrafos</td><td>Link subrayado</td></tr>
+    </table>
+</div>
+
+<details class="codigo-completo">
+    <summary>📁 Ejemplo de uso del componente</summary>
+    <pre><code class="language-php">&lt;!-- Botón estándar --&gt;
+&lt;x-boton-whatsapp 
+    telefono="+51 999 888 777"
+    texto="Enviar confirmación"
+    :cita="[
+        'paciente_nombre' => 'Juan Pérez',
+        'doctor_nombre' => 'Dr. García',
+        'fecha' => '25/12/2024',
+        'hora' => '10:00 AM',
+    ]"
+/&gt;
+
+&lt;!-- Botón flotante --&gt;
+&lt;x-boton-whatsapp 
+    tipo="flotante"
+    telefono="+51 999 888 777"
+/&gt;
+
+&lt;!-- Link simple --&gt;
+&lt;x-boton-whatsapp 
+    tipo="link"
+    telefono="+51 999 888 777"
+    texto="Contáctanos por WhatsApp"
+/&gt;</code></pre>
+</details>
+
+<div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 0.5rem; padding: 1.5rem;">
+    <h4 style="color: #1e40af;">🎉 ¿Qué aprendimos hoy?</h4>
+    <ul>
+        <li><code>https://wa.me/</code> es la URL oficial de WhatsApp Click to Chat</li>
+        <li><code>preg_replace('/[^0-9]/', '', $numero)</code> limpia el número de teléfono</li>
+        <li><code>urlencode()</code> convierte texto a formato URL seguro</li>
+        <li>Podemos generar mensajes automáticos con datos de la cita</li>
+        <li>Tres tipos de botón: estándar, flotante y link</li>
+    </ul>
+</div>
+
+<p style="font-size: 1.1rem;">¡Felicitaciones! Has completado el Módulo 6. Ahora tienes un sistema completo de citas con validaciones, horarios dinámicos y confirmación por WhatsApp. En el siguiente módulo trabajaremos con testimonios y reseñas.</p>
+
+</article>
+</div>
+</body>
+</html>

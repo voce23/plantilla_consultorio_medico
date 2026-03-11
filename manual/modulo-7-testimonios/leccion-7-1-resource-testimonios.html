@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lección 7.1: Resource Testimonios en Filament</title>
+    <link rel="stylesheet" href="../micss/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+</head>
+<body>
+<div class="leccion-contenedor">
+<article>
+
+<h1 class="leccion-titulo">Lección 7.1: Resource Testimonios en Filament</h1>
+<h2>CRUD completo para gestionar testimonios de pacientes</h2>
+
+<!-- Analogía -->
+<div class="analogia-caja">
+    <strong>🎯 Piensa en esto:</strong> Imagina que tienes un buzón de sugerencias en tu clínica donde los pacientes dejan notas contando su experiencia. Algunas notas son tan buenas que quieres mostrarlas en la pared para que otros pacientes las vean. Este Resource es como tener ese buzón organizado digitalmente, donde puedes aprobar qué testimonios se muestran y cuáles no.
+</div>
+
+<!-- Paso 1 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">1</span>
+    <strong>Crear el modelo y la migración</strong>
+    <p>Primero necesitamos la "ficha" donde guardaremos cada testimonio. Fíjate que guardamos: quién lo escribió, su foto, cuántas estrellas nos dio, y el comentario.</p>
+    <p><strong>📍 Terminal:</strong></p>
+    <pre><code class="language-bash">php artisan make:model Testimonio -m</code></pre>
+    <p style="color: #6b7280;">💡 El <code>-m</code> es mágico: crea el modelo Y la migración al mismo tiempo.</p>
+</div>
+
+<!-- Paso 2 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">2</span>
+    <strong>Definir los campos en la migración</strong>
+    <p>Aquí le decimos a la base de datos qué información guardar de cada testimonio. Mira, incluimos campos para aprobar o destacar testimonios.</p>
+    <p><strong>📍 Archivo:</strong> <code>database/migrations/2026_03_10_205301_create_testimonios_table.php</code></p>
+    <pre><code class="language-php">$table->string('nombre');
+$table->string('foto')->nullable();
+$table->tinyInteger('estrellas')->default(5);
+$table->text('comentario');
+$table->string('servicio')->nullable();
+$table->boolean('aprobado')->default(false);
+$table->boolean('destacado')->default(false);</code></pre>
+    <p style="color: #6b7280;">💡 <code>aprobado</code> nos sirve para moderar: solo los testimonios aprobados se ven en la web.</p>
+</div>
+
+<!-- Paso 3 -->
+<div class="tarjeta-paso">
+    <span class="paso-numero">3</span>
+    <strong>Crear el Filament Resource</strong>
+    <p>Ahora generamos todo el panel de administración automáticamente. Filament hace el trabajo pesado por nosotros.</p>
+    <p><strong>📍 Terminal:</strong></p>
+    <pre><code class="language-bash">php artisan make:filament-resource Testimonio --generate</code></pre>
+    <p style="color: #6b7280;">💡 Cuando te pregunte por el "title attribute", escribe <code>nombre</code>.</p>
+</div>
+
+<!-- Micro-código destacado -->
+<div class="micro-codigo-destacado">
+    <h4>📝 ESTE ES EL CÓDIGO QUE VAMOS A APRENDER:</h4>
+    <p><strong>📍 Archivo:</strong> <code>app/Filament/Resources/Testimonios/Schemas/TestimonioForm.php</code></p>
+    <pre><code class="language-php">Section::make('Información del Paciente')
+    ->schema([
+        TextInput::make('nombre')
+            ->label('Nombre completo')
+            ->required(),
+
+        FileUpload::make('foto')
+            ->label('Foto de perfil')
+            ->image()
+            ->directory('testimonios/fotos'),
+
+        Select::make('estrellas')
+            ->label('Calificación')
+            ->options([
+                1 => '⭐ 1 estrella',
+                2 => '⭐⭐ 2 estrellas',
+                3 => '⭐⭐⭐ 3 estrellas',
+                4 => '⭐⭐⭐⭐ 4 estrellas',
+                5 => '⭐⭐⭐⭐⭐ 5 estrellas',
+            ])
+            ->default(5),
+
+        Toggle::make('aprobado')
+            ->label('Aprobado para publicar'),
+    ])</code></pre>
+</div>
+
+<!-- Explicación línea por línea -->
+<h4>🔍 Vamos a entender línea por línea (como si fuera la primera vez):</h4>
+
+<div class="linea-explicacion">
+    <code>Section::make('Información del Paciente')</code> 
+    <br>→ Creamos una caja con título que agrupa campos relacionados. Es como una sección en un formulario de papel.
+</div>
+
+<div class="linea-explicacion">
+    <code>TextInput::make('nombre')</code> 
+    <br>→ Un campo de texto simple para que escriban el nombre del paciente.
+</div>
+
+<div class="linea-explicacion">
+    <code>FileUpload::make('foto')->image()</code> 
+    <br>→ Un botón para subir archivos que solo acepta imágenes. Fíjate que le decimos que guarde en la carpeta <code>testimonios/fotos</code>.
+</div>
+
+<div class="linea-explicacion">
+    <code>Select::make('estrellas')->options([...])</code> 
+    <br>→ Un menú desplegable donde elijen de 1 a 5 estrellas. Lo bonito es que mostramos las estrellas como emojis ⭐ para que sea visual.
+</div>
+
+<div class="linea-explicacion">
+    <code>Toggle::make('aprobado')</code> 
+    <br>→ Un interruptor ON/OFF para decidir si este testimonio se muestra en la web o sigue pendiente de revisión.
+</div>
+
+<!-- Tabla visual -->
+<div class="tabla-visual">
+    <h4>📊 Así se ve tu tabla en la base de datos:</h4>
+    <table>
+        <tr>
+            <th>id</th>
+            <th class="celda-destacada">nombre</th>
+            <th>foto</th>
+            <th class="celda-destacada">estrellas</th>
+            <th>comentario</th>
+            <th>aprobado</th>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td class="celda-destacada">María García</td>
+            <td>testimonios/fotos/maria.jpg</td>
+            <td class="celda-destacada">5</td>
+            <td>Excelente atención, muy profesional...</td>
+            <td>true</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td class="celda-destacada">Carlos López</td>
+            <td>null</td>
+            <td class="celda-destacada">4</td>
+            <td>Buen servicio, recomendado</td>
+            <td>false</td>
+        </tr>
+    </table>
+    <p style="color: #92400e; font-weight: bold;">👆 Los campos destacados son los que más usaremos para mostrar en la web.</p>
+</div>
+
+<!-- Código completo colapsible -->
+<details class="codigo-completo">
+    <summary>📁 ¿Quieres ver el código completo del formulario? (opcional)</summary>
+    <p style="color: #6b7280;">Esto es solo para que veas dónde va tu código. No necesitas memorizar todo esto:</p>
+    <pre><code class="language-php">&lt;?php
+
+namespace App\Filament\Resources\Testimonios\Schemas;
+
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+
+class TestimonioForm
+{
+    public static function configure(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                Section::make('Información del Paciente')
+                    ->schema([
+                        TextInput::make('nombre')
+                            ->label('Nombre completo')
+                            ->placeholder('Ej: María García')
+                            ->required()
+                            ->maxLength(100)
+                            ->columnSpan(2),
+
+                        FileUpload::make('foto')
+                            ->label('Foto de perfil')
+                            ->image()
+                            ->imageEditor()
+                            ->directory('testimonios/fotos')
+                            ->maxSize(1024)
+                            ->columnSpan(1),
+                    ])
+                    ->columns(3),
+
+                Section::make('Valoración')
+                    ->schema([
+                        Select::make('estrellas')
+                            ->label('Calificación')
+                            ->options([
+                                1 => '⭐ 1 estrella',
+                                2 => '⭐⭐ 2 estrellas',
+                                3 => '⭐⭐⭐ 3 estrellas',
+                                4 => '⭐⭐⭐⭐ 4 estrellas',
+                                5 => '⭐⭐⭐⭐⭐ 5 estrellas',
+                            ])
+                            ->default(5)
+                            ->required(),
+
+                        TextInput::make('servicio')
+                            ->label('Servicio recibido')
+                            ->placeholder('Ej: Consulta de Cardiología'),
+                    ])
+                    ->columns(2),
+
+                Section::make('Testimonio')
+                    ->schema([
+                        Textarea::make('comentario')
+                            ->label('Comentario')
+                            ->required()
+                            ->rows(4)
+                            ->maxLength(1000),
+                    ]),
+
+                Section::make('Publicación')
+                    ->schema([
+                        Toggle::make('aprobado')
+                            ->label('Aprobado para publicar')
+                            ->default(false),
+
+                        Toggle::make('destacado')
+                            ->label('Destacar testimonio')
+                            ->default(false),
+                    ])
+                    ->columns(2),
+            ]);
+    }
+}</code></pre>
+</details>
+
+<!-- Resumen -->
+<div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 0.5rem; padding: 1.5rem;">
+    <h4 style="color: #1e40af;">🎉 ¿Qué aprendimos hoy?</h4>
+    <ul>
+        <li>Creamos un modelo Testimonio con todos los campos necesarios (nombre, foto, estrellas, comentario)</li>
+        <li>Usamos <code>FileUpload</code> para que los administradores suban fotos de los pacientes</li>
+        <li>El campo <code>Select</code> con emojis hace que elegir estrellas sea visual y amigable</li>
+        <li>Los toggles de "aprobado" y "destacado" nos dan control total sobre qué se muestra en la web</li>
+        <li>Organizamos el formulario en secciones para que sea más fácil de usar</li>
+    </ul>
+</div>
+
+<p style="font-size: 1.1rem;">¡Listo! Ya tienes tu panel para gestionar testimonios. En la siguiente lección vamos a crear el carrusel para mostrarlos en la web con animaciones bonitas. ¡Nos vemos allí! 🚀</p>
+
+</article>
+</div>
+</body>
+</html>

@@ -1,0 +1,1355 @@
+---
+title: Render hooks
+---
+
+## Introduction
+
+Filament allows you to render Blade content at various points in the frameworks views. It's useful for plugins to be able to inject HTML into the framework. Also, since Filament does not recommend publishing the views due to an increased risk of breaking changes, it's also useful for users.
+
+## Registering render hooks
+
+To register render hooks, you can call `FilamentView::registerRenderHook()` from a service provider or middleware. The first argument is the name of the render hook, and the second argument is a callback that returns the content to be rendered:
+
+```php
+use Filament\Support\Facades\FilamentView;
+use Filament\View\PanelsRenderHook;
+use Illuminate\Support\Facades\Blade;
+
+FilamentView::registerRenderHook(
+    PanelsRenderHook::BODY_START,
+    fn (): string => Blade::render('@livewire(\'livewire-ui-modal\')'),
+);
+```
+
+You could also render view content from a file:
+
+```php
+use Filament\Support\Facades\FilamentView;
+use Filament\View\PanelsRenderHook;
+use Illuminate\Contracts\View\View;
+
+FilamentView::registerRenderHook(
+    PanelsRenderHook::BODY_START,
+    fn (): View => view('impersonation-banner'),
+);
+```
+
+## Available render hooks
+
+### Panel Builder render hooks
+
+```php
+use Filament\View\PanelsRenderHook;
+```
+
+- `PanelsRenderHook::AUTH_LOGIN_FORM_AFTER` - After login form
+- `PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE` - Before login form
+- `PanelsRenderHook::AUTH_PASSWORD_RESET_REQUEST_FORM_AFTER` - After password reset request form
+- `PanelsRenderHook::AUTH_PASSWORD_RESET_REQUEST_FORM_BEFORE` - Before password reset request form
+- `PanelsRenderHook::AUTH_PASSWORD_RESET_RESET_FORM_AFTER` - After password reset form
+- `PanelsRenderHook::AUTH_PASSWORD_RESET_RESET_FORM_BEFORE` - Before password reset form
+- `PanelsRenderHook::AUTH_REGISTER_FORM_AFTER` - After register form
+- `PanelsRenderHook::AUTH_REGISTER_FORM_BEFORE` - Before register form
+- `PanelsRenderHook::BODY_END` - Before `</body>`
+- `PanelsRenderHook::BODY_START` - After `<body>`
+- `PanelsRenderHook::CONTENT_AFTER` - After page content
+- `PanelsRenderHook::CONTENT_BEFORE` - Before page content
+- `PanelsRenderHook::CONTENT_END` - After page content, inside `<main>`
+- `PanelsRenderHook::CONTENT_START` - Before page content, inside `<main>`
+- `PanelsRenderHook::FOOTER` - Footer of the page
+- `PanelsRenderHook::GLOBAL_SEARCH_AFTER` - After the [global search](../resources/global-search) container, inside the topbar
+- `PanelsRenderHook::GLOBAL_SEARCH_BEFORE` - Before the [global search](../resources/global-search) container, inside the topbar
+- `PanelsRenderHook::GLOBAL_SEARCH_END` - The end of the [global search](../resources/global-search) container
+- `PanelsRenderHook::GLOBAL_SEARCH_START` - The start of the [global search](../resources/global-search) container
+- `PanelsRenderHook::HEAD_END` - Before `</head>`
+- `PanelsRenderHook::HEAD_START` - After `<head>`
+- `PanelsRenderHook::LAYOUT_END` - End of the layout container, also [can be scoped](#scoping-render-hooks) to the page class
+- `PanelsRenderHook::LAYOUT_START` - Start of the layout container, also [can be scoped](#scoping-render-hooks) to the page class
+- `PanelsRenderHook::PAGE_END` - End of the page content container, also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::PAGE_FOOTER_WIDGETS_AFTER` - After the page footer widgets, also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::PAGE_FOOTER_WIDGETS_BEFORE` - Before the page footer widgets, also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::PAGE_FOOTER_WIDGETS_END` - End of the page footer widgets, also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::PAGE_FOOTER_WIDGETS_START` - Start of the page footer widgets, also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::PAGE_HEADER_ACTIONS_AFTER` - After the page header actions, also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::PAGE_HEADER_ACTIONS_BEFORE` - Before the page header actions, also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::PAGE_HEADER_WIDGETS_AFTER` - After the page header widgets, also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::PAGE_HEADER_WIDGETS_BEFORE` - Before the page header widgets, also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::PAGE_HEADER_WIDGETS_END` - End of the page header widgets, also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::PAGE_HEADER_WIDGETS_START` - Start of the page header widgets, also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::PAGE_START` - Start of the page content container, also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::PAGE_SUB_NAVIGATION_END_AFTER` - After the page sub navigation "end" sidebar position, also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::PAGE_SUB_NAVIGATION_END_BEFORE` - Before the page sub navigation "end" sidebar position, also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::PAGE_SUB_NAVIGATION_SELECT_AFTER` - After the page sub navigation select (for mobile), also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::PAGE_SUB_NAVIGATION_SELECT_BEFORE` - Before the page sub navigation select (for mobile), also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::PAGE_SUB_NAVIGATION_SIDEBAR_AFTER` - After the page sub navigation sidebar, also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::PAGE_SUB_NAVIGATION_SIDEBAR_BEFORE` - Before the page sub navigation sidebar, also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::PAGE_SUB_NAVIGATION_START_AFTER` - After the page sub navigation "start" sidebar position, also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::PAGE_SUB_NAVIGATION_START_BEFORE` - Before the page sub navigation "start" sidebar position, also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::PAGE_SUB_NAVIGATION_TOP_AFTER` - After the page sub navigation "top" tabs position, also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::PAGE_SUB_NAVIGATION_TOP_BEFORE` - Before the page sub navigation "top" tabs position, also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::RESOURCE_PAGES_LIST_RECORDS_TABLE_AFTER` - After the resource table, also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::RESOURCE_PAGES_LIST_RECORDS_TABLE_BEFORE` - Before the resource table, also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::RESOURCE_PAGES_LIST_RECORDS_TABS_END` - The end of the filter tabs (after the last tab), also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::RESOURCE_PAGES_LIST_RECORDS_TABS_START` - The start of the filter tabs (before the first tab), also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::RESOURCE_PAGES_MANAGE_RELATED_RECORDS_TABLE_AFTER` - After the relation manager table, also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::RESOURCE_PAGES_MANAGE_RELATED_RECORDS_TABLE_BEFORE` - Before the relation manager table, also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::RESOURCE_RELATION_MANAGER_AFTER` - After the relation manager table, also [can be scoped](#scoping-render-hooks) to the page or relation manager class
+- `PanelsRenderHook::RESOURCE_RELATION_MANAGER_BEFORE` - Before the relation manager table, also [can be scoped](#scoping-render-hooks) to the page or relation manager class
+- `PanelsRenderHook::RESOURCE_TABS_END` - The end of the resource tabs (after the last tab), also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::RESOURCE_TABS_START` - The start of the resource tabs (before the first tab), also [can be scoped](#scoping-render-hooks) to the page or resource class
+- `PanelsRenderHook::SCRIPTS_AFTER` - After scripts are defined
+- `PanelsRenderHook::SCRIPTS_BEFORE` - Before scripts are defined
+- `PanelsRenderHook::SIDEBAR_LOGO_AFTER` - After the logo in the sidebar
+- `PanelsRenderHook::SIDEBAR_LOGO_BEFORE` - Before the logo in the sidebar
+- `PanelsRenderHook::SIDEBAR_NAV_END` - In the [sidebar](../navigation), before `</nav>`
+- `PanelsRenderHook::SIDEBAR_NAV_START` - In the [sidebar](../navigation), after `<nav>`
+- `PanelsRenderHook::SIMPLE_LAYOUT_END` - End of the simple layout container, also [can be scoped](#scoping-render-hooks) to the page class
+- `PanelsRenderHook::SIMPLE_LAYOUT_START` - Start of the simple layout container, also [can be scoped](#scoping-render-hooks) to the page class
+- `PanelsRenderHook::SIMPLE_PAGE_END` - End of the simple page content container, also [can be scoped](#scoping-render-hooks) to the page class
+- `PanelsRenderHook::SIMPLE_PAGE_START` - Start of the simple page content container, also [can be scoped](#scoping-render-hooks) to the page class
+- `PanelsRenderHook::SIDEBAR_FOOTER` - Pinned to the bottom of the sidebar, below the content
+- `PanelsRenderHook::SIDEBAR_START` - Start of the sidebar container
+- `PanelsRenderHook::STYLES_AFTER` - After styles are defined
+- `PanelsRenderHook::STYLES_BEFORE` - Before styles are defined
+- `PanelsRenderHook::TENANT_MENU_AFTER` - After the [tenant menu](../users/tenancy#customizing-the-tenant-menu)
+- `PanelsRenderHook::TENANT_MENU_BEFORE` - Before the [tenant menu](../users/tenancy#customizing-the-tenant-menu)
+- `PanelsRenderHook::TOPBAR_AFTER` - Below the topbar
+- `PanelsRenderHook::TOPBAR_BEFORE` - Above the topbar
+- `PanelsRenderHook::TOPBAR_END` - End of the topbar container
+- `PanelsRenderHook::TOPBAR_LOGO_AFTER` - After the logo in the topbar
+- `PanelsRenderHook::TOPBAR_LOGO_BEFORE` - Before the logo in the topbar
+- `PanelsRenderHook::TOPBAR_START` - Start of the topbar container
+- `PanelsRenderHook::USER_MENU_AFTER` - After the [user menu](../navigation/user-menu)
+- `PanelsRenderHook::USER_MENU_BEFORE` - Before the [user menu](../navigation/user-menu)
+- `PanelsRenderHook::USER_MENU_PROFILE_AFTER` - After the profile item in the [user menu](../navigation/user-menu)
+- `PanelsRenderHook::USER_MENU_PROFILE_BEFORE` - Before the profile item in the [user menu](../navigation/user-menu)
+
+
+### Table Builder render hooks
+
+All these render hooks [can be scoped](#scoping-render-hooks) to any table Livewire component class. When using the Panel Builder, these classes might be the List or Manage page of a resource, or a relation manager. Table widgets are also Livewire component classes.
+
+```php
+use Filament\Tables\View\TablesRenderHook;
+```
+
+- `TablesRenderHook::FILTER_INDICATORS` - Replace the existing filter indicators, receives `filterIndicators` data as `array<Filament\Tables\Filters\Indicator>`
+- `TablesRenderHook::HEADER_CELL` - Replace the existing header cells, receives the `Filament\Tables\Columns\Column` object as `column` and `isReordering` in the data.
+- `TablesRenderHook::SELECTION_INDICATOR_ACTIONS_AFTER` - After the "select all" and "deselect all" action buttons in the selection indicator bar
+- `TablesRenderHook::SELECTION_INDICATOR_ACTIONS_BEFORE` - Before the "select all" and "deselect all" action buttons in the selection indicator bar
+- `TablesRenderHook::HEADER_AFTER` - After the header container
+- `TablesRenderHook::HEADER_BEFORE` - Before the header container
+- `TablesRenderHook::TOOLBAR_AFTER` - After the toolbar container
+- `TablesRenderHook::TOOLBAR_BEFORE` - Before the toolbar container
+- `TablesRenderHook::TOOLBAR_END` - The end of the toolbar
+- `TablesRenderHook::TOOLBAR_GROUPING_SELECTOR_AFTER` - After the [grouping](../tables/grouping) selector
+- `TablesRenderHook::TOOLBAR_GROUPING_SELECTOR_BEFORE` - Before the [grouping](../tables/grouping) selector
+- `TablesRenderHook::TOOLBAR_REORDER_TRIGGER_AFTER` - After the [reorder](../tables/overview#reordering-records) trigger
+- `TablesRenderHook::TOOLBAR_REORDER_TRIGGER_BEFORE` - Before the [reorder](../tables/overview#reordering-records) trigger
+- `TablesRenderHook::TOOLBAR_SEARCH_AFTER` - After the [search](../tables/overview#making-columns-sortable-and-searchable) container
+- `TablesRenderHook::TOOLBAR_SEARCH_BEFORE` - Before the [search](../tables/overview#making-columns-sortable-and-searchable) container
+- `TablesRenderHook::TOOLBAR_START` - The start of the toolbar
+- `TablesRenderHook::TOOLBAR_COLUMN_MANAGER_TRIGGER_AFTER` - After the [column manager](../tables/columns/overview#toggling-column-visibility) trigger
+- `TablesRenderHook::TOOLBAR_COLUMN_MANAGER_TRIGGER_BEFORE` - Before the [column manager](../tables/columns/overview#toggling-column-visibility) trigger
+
+
+### Actions render hooks
+
+All these render hooks [can be scoped](#scoping-render-hooks) to any Livewire component class. When using the Panel Builder, these classes might be the List or Manage page of a resource, or a relation manager.
+
+Scoping is typically not enough in this case, as Livewire components can have multiple actions, so you can access the `action` data as `Filament\Actions\Action` to identify the specific action in all these render hooks.
+
+```php
+use Filament\Actions\View\ActionsRenderHook;
+```
+
+- `ActionsRenderHook::MODAL_CUSTOM_CONTENT_AFTER` - After the [modal content](../actions/modals#custom-modal-content)
+- `ActionsRenderHook::MODAL_CUSTOM_CONTENT_BEFORE` - Before the [modal content](../actions/modals#custom-modal-content)
+- `ActionsRenderHook::MODAL_CUSTOM_CONTENT_FOOTER_AFTER` - After the [modal content footer](../actions/modals#adding-custom-modal-content-below-the-form)
+- `ActionsRenderHook::MODAL_CUSTOM_CONTENT_FOOTER_BEFORE` - Before the [modal content footer](../actions/modals#adding-custom-modal-content-below-the-form)
+- `ActionsRenderHook::MODAL_SCHEMA_AFTER` - After the [modal schema](../actions/modals#rendering-a-schema-in-a-modal)
+- `ActionsRenderHook::MODAL_SCHEMA_BEFORE` - Before the [modal schema](../actions/modals#rendering-a-schema-in-a-modal)
+
+
+### Widgets render hooks
+
+```php
+use Filament\Widgets\View\WidgetsRenderHook;
+```
+
+- `WidgetsRenderHook::TABLE_WIDGET_END` - End of the [table widget](../widgets/overview#table-widgets), after the table itself, also [can be scoped](#scoping-render-hooks) to the table widget class
+- `WidgetsRenderHook::TABLE_WIDGET_START` - Start of the [table widget](../widgets/overview#table-widgets), before the table itself, also [can be scoped](#scoping-render-hooks) to the table widget class
+
+
+## Scoping render hooks
+
+Some render hooks can be given a "scope", which allows them to only be output on a specific page or Livewire component. For instance, you might want to register a render hook for just 1 page. To do that, you can pass the class of the page or component as the second argument to `registerRenderHook()`:
+
+```php
+use Filament\Support\Facades\FilamentView;
+use Filament\View\PanelsRenderHook;
+use Illuminate\Support\Facades\Blade;
+
+FilamentView::registerRenderHook(
+    PanelsRenderHook::PAGE_START,
+    fn (): View => view('warning-banner'),
+    scopes: \App\Filament\Resources\Users\Pages\EditUser::class,
+);
+```
+
+You can also pass an array of scopes to register the render hook for:
+
+```php
+use Filament\Support\Facades\FilamentView;
+use Filament\View\PanelsRenderHook;
+
+FilamentView::registerRenderHook(
+    PanelsRenderHook::PAGE_START,
+    fn (): View => view('warning-banner'),
+    scopes: [
+        \App\Filament\Resources\Users\Pages\CreateUser::class,
+        \App\Filament\Resources\Users\Pages\EditUser::class,
+    ],
+);
+```
+
+Some render hooks for the [Panel Builder](#panel-builder-render-hooks) allow you to scope hooks to all pages in a resource:
+
+```php
+use Filament\Support\Facades\FilamentView;
+use Filament\View\PanelsRenderHook;
+
+FilamentView::registerRenderHook(
+    PanelsRenderHook::PAGE_START,
+    fn (): View => view('warning-banner'),
+    scopes: \App\Filament\Resources\Users\UserResource::class,
+);
+```
+
+### Retrieving the currently active scopes inside the render hook
+
+The `$scopes` are passed to the render hook function, and you can use them to determine which page or component the render hook is being rendered on:
+
+```php
+use Filament\Support\Facades\FilamentView;
+use Filament\View\PanelsRenderHook;
+
+FilamentView::registerRenderHook(
+    PanelsRenderHook::PAGE_START,
+    fn (array $scopes): View => view('warning-banner', ['scopes' => $scopes]),
+    scopes: \App\Filament\Resources\Users\UserResource::class,
+);
+```
+
+## Passing data to render hooks
+
+Render hooks can receive "data" from when the hook is rendered. To access data from a render hook, you can inject it using an `array $data` parameter to the hook's rendering function:
+
+```php
+use Filament\Support\Facades\FilamentView;
+use Filament\Tables\View\TablesRenderHook;
+
+FilamentView::registerRenderHook(
+    TablesRenderHook::FILTER_INDICATORS,
+    fn (array $data): View => view('filter-indicators', ['indicators' => $data['filterIndicators']]),
+);
+```
+
+## Rendering hooks
+
+Plugin developers might find it useful to expose render hooks to their users. You do not need to register them anywhere, simply output them in Blade like so:
+
+```blade
+{{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::PAGE_START) }}
+```
+
+To provide [scope](#scoping-render-hooks) your render hook, you can pass it as the second argument to `renderHook()`. For instance, if your hook is inside a Livewire component, you can pass the class of the component using `static::class`:
+
+```blade
+{{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::PAGE_START, scopes: $this->getRenderHookScopes()) }}
+```
+
+You can even pass multiple scopes as an array, and all render hooks that match any of the scopes will be rendered:
+
+```blade
+{{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::PAGE_START, scopes: [static::class, \App\Filament\Resources\Users\UserResource::class]) }}
+```
+
+You can pass [data](#passing-data-to-render-hooks) to a render hook using a `data` argument to the `renderHook()` function:
+
+```blade
+{{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\Tables\View\TablesRenderHook::FILTER_INDICATORS, data: ['filterIndicators' => $filterIndicators]) }}
+```
+
+
+---
+title: Registering assets
+---
+
+## Introduction
+
+All packages in the Filament ecosystem share an asset management system. This allows both official plugins and third-party plugins to register CSS and JavaScript files that can then be consumed by Blade views.
+
+## The `FilamentAsset` facade
+
+The `FilamentAsset` facade is used to register files into the asset system. These files may be sourced from anywhere in the filesystem, but are then copied into the `/public` directory of the application when the `php artisan filament:assets` command is run. By copying them into the `/public` directory for you, we can predictably load them in Blade views, and also ensure that third party packages are able to load their assets without having to worry about where they are located.
+
+Assets always have a unique ID chosen by you, which is used as the file name when the asset is copied into the `/public` directory. This ID is also used to reference the asset in Blade views. While the ID is unique, if you are registering assets for a plugin, then you do not need to worry about IDs clashing with other plugins, since the asset will be copied into a directory named after your plugin.
+
+The `FilamentAsset` facade should be used in the `boot()` method of a service provider. It can be used inside an application service provider such as `AppServiceProvider`, or inside a plugin service provider.
+
+The `FilamentAsset` facade has one main method, `register()`, which accepts an array of assets to register:
+
+```php
+use Filament\Support\Facades\FilamentAsset;
+
+public function boot(): void
+{
+    // ...
+
+    FilamentAsset::register([
+        // ...
+    ]);
+
+    // ...
+}
+```
+
+### Registering assets for a plugin
+
+When registering assets for a plugin, you should pass the name of the Composer package as the second argument of the `register()` method:
+
+```php
+use Filament\Support\Facades\FilamentAsset;
+
+FilamentAsset::register([
+    // ...
+], package: 'danharrin/filament-blog');
+```
+
+Now, all the assets for this plugin will be copied into their own directory inside `/public`, to avoid the possibility of clashing with other plugins' files with the same names.
+
+## Registering CSS files
+
+To register a CSS file with the asset system, use the `FilamentAsset::register()` method in the `boot()` method of a service provider. You must pass in an array of `Css` objects, which each represents a CSS file that should be registered in the asset system.
+
+Each `Css` object has a unique ID and a path to the CSS file:
+
+```php
+use Filament\Support\Assets\Css;
+use Filament\Support\Facades\FilamentAsset;
+
+FilamentAsset::register([
+    Css::make('custom-stylesheet', __DIR__ . '/../../resources/css/custom.css'),
+]);
+```
+
+In this example, we use `__DIR__` to generate a relative path to the asset from the current file. For instance, if you were adding this code to `/app/Providers/AppServiceProvider.php`, then the CSS file should exist in `/resources/css/custom.css`.
+
+Now, when the `php artisan filament:assets` command is run, this CSS file is copied into the `/public` directory. In addition, it is now loaded into all Blade views that use Filament. If you're interested in only loading the CSS when it is required by an element on the page, check out the [Lazy loading CSS](#lazy-loading-css) section.
+
+### Using Tailwind CSS in plugins
+
+Typically, registering CSS files is used to register custom stylesheets for your application. If you want to process these files using Tailwind CSS, you need to consider the implications of that, especially if you are a plugin developer.
+
+Tailwind builds are unique to every application - they contain a minimal set of utility classes, only the ones that you are actually using in your application. This means that if you are a plugin developer, you probably should not be building your Tailwind CSS files into your plugin. Instead, you should provide the raw CSS files and instruct the user that they should build the Tailwind CSS file themselves. To do this, they need to add your vendor directory to their custom theme's CSS file using the `@source` directive. In their [custom theme](../styling#creating-a-custom-theme) CSS file (e.g., `resources/css/filament/admin/theme.css`), they should add:
+
+```css
+@import "tailwindcss";
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+@source '../../../../vendor/danharrin/filament-blog/resources/views/**/*'; /* Your plugin's vendor directory */
+```
+
+This means that when they build their Tailwind CSS file, it will include all the utility classes that are used in your plugin's views, as well as the utility classes that are used in their application and the Filament core.
+
+However, with this technique, there might be extra complications for users who use your plugin with the [Panel Builder](../panel-configuration). If they have a [custom theme](../styling#creating-a-custom-theme), they will be fine, since they are building their own CSS file anyway using Tailwind CSS. However, if they are using the default stylesheet which is shipped with the Panel Builder, you might have to be careful about the utility classes that you use in your plugin's views. For instance, if you use a utility class that is not included in the default stylesheet, the user is not compiling it themselves, and it will not be included in the final CSS file. This means that your plugin's views might not look as expected. This is one of the few situations where I would recommend compiling and [registering](#registering-css-files) a Tailwind CSS-compiled stylesheet in your plugin.
+
+### Lazy loading CSS
+
+By default, all CSS files registered with the asset system are loaded in the `<head>` of every Filament page. This is the simplest way to load CSS files, but sometimes they may be quite heavy and not required on every page. In this case, you can leverage the [Alpine.js Lazy Load Assets](https://github.com/tanthammar/alpine-lazy-load-assets) package that comes bundled with Filament. It allows you to easily load CSS files on-demand using Alpine.js. The premise is very simple, you use the `x-load-css` directive on an element, and when that element is loaded onto the page, the specified CSS files are loaded into the `<head>` of the page. This is perfect for both small UI elements and entire pages that require a CSS file:
+
+```blade
+<div
+    x-data="{}"
+    x-load-css="[@js(\Filament\Support\Facades\FilamentAsset::getStyleHref('custom-stylesheet'))]"
+>
+    <!-- ... -->
+</div>
+```
+
+To prevent the CSS file from being loaded automatically, you can use the `loadedOnRequest()` method:
+
+```php
+use Filament\Support\Assets\Css;
+use Filament\Support\Facades\FilamentAsset;
+
+FilamentAsset::register([
+    Css::make('custom-stylesheet', __DIR__ . '/../../resources/css/custom.css')->loadedOnRequest(),
+]);
+```
+
+If your CSS file was [registered to a plugin](#registering-assets-for-a-plugin), you must pass that in as the second argument to the `FilamentAsset::getStyleHref()` method:
+
+```blade
+<div
+    x-data="{}"
+    x-load-css="[@js(\Filament\Support\Facades\FilamentAsset::getStyleHref('custom-stylesheet', package: 'danharrin/filament-blog'))]"
+>
+    <!-- ... -->
+</div>
+```
+
+### Registering CSS files from a URL
+
+If you want to register a CSS file from a URL, you may do so. These assets will be loaded on every page as normal, but not copied into the `/public` directory when the `php artisan filament:assets` command is run. This is useful for registering external stylesheets from a CDN, or stylesheets that you are already compiling directly into the `/public` directory:
+
+```php
+use Filament\Support\Assets\Css;
+use Filament\Support\Facades\FilamentAsset;
+
+FilamentAsset::register([
+    Css::make('example-external-stylesheet', 'https://example.com/external.css'),
+    Css::make('example-local-stylesheet', asset('css/local.css')),
+]);
+```
+
+### Registering CSS variables
+
+Sometimes, you may wish to use dynamic data from the backend in CSS files. To do this, you can use the `FilamentAsset::registerCssVariables()` method in the `boot()` method of a service provider:
+
+```php
+use Filament\Support\Facades\FilamentAsset;
+
+FilamentAsset::registerCssVariables([
+    'background-image' => asset('images/background.jpg'),
+]);
+```
+
+Now, you can access these variables from any CSS file:
+
+```css
+background-image: var(--background-image);
+```
+
+## Registering JavaScript files
+
+To register a JavaScript file with the asset system, use the `FilamentAsset::register()` method in the `boot()` method of a service provider. You must pass in an array of `Js` objects, which each represents a JavaScript file that should be registered in the asset system.
+
+Each `Js` object has a unique ID and a path to the JavaScript file:
+
+```php
+use Filament\Support\Assets\Js;
+
+FilamentAsset::register([
+    Js::make('custom-script', __DIR__ . '/../../resources/js/custom.js'),
+]);
+```
+
+In this example, we use `__DIR__` to generate a relative path to the asset from the current file. For instance, if you were adding this code to `/app/Providers/AppServiceProvider.php`, then the JavaScript file should exist in `/resources/js/custom.js`.
+
+Now, when the `php artisan filament:assets` command is run, this JavaScript file is copied into the `/public` directory. In addition, it is now loaded into all Blade views that use Filament. If you're interested in only loading the JavaScript when it is required by an element on the page, check out the [Lazy loading JavaScript](#lazy-loading-javascript) section.
+
+### Lazy loading JavaScript
+
+By default, all JavaScript files registered with the asset system are loaded at the bottom of every Filament page. This is the simplest way to load JavaScript files, but sometimes they may be quite heavy and not required on every page. In this case, you can leverage the [Alpine.js Lazy Load Assets](https://github.com/tanthammar/alpine-lazy-load-assets) package that comes bundled with Filament. It allows you to easily load JavaScript files on-demand using Alpine.js. The premise is very simple, you use the `x-load-js` directive on an element, and when that element is loaded onto the page, the specified JavaScript files are loaded at the bottom of the page. This is perfect for both small UI elements and entire pages that require a JavaScript file:
+
+```blade
+<div
+    x-data="{}"
+    x-load-js="[@js(\Filament\Support\Facades\FilamentAsset::getScriptSrc('custom-script'))]"
+>
+    <!-- ... -->
+</div>
+```
+
+To prevent the JavaScript file from being loaded automatically, you can use the `loadedOnRequest()` method:
+
+```php
+use Filament\Support\Assets\Js;
+use Filament\Support\Facades\FilamentAsset;
+
+FilamentAsset::register([
+    Js::make('custom-script', __DIR__ . '/../../resources/js/custom.js')->loadedOnRequest(),
+]);
+```
+
+If your JavaScript file was [registered to a plugin](#registering-assets-for-a-plugin), you must pass that in as the second argument to the `FilamentAsset::getScriptSrc()` method:
+
+```blade
+<div
+    x-data="{}"
+    x-load-js="[@js(\Filament\Support\Facades\FilamentAsset::getScriptSrc('custom-script', package: 'danharrin/filament-blog'))]"
+>
+    <!-- ... -->
+</div>
+```
+
+#### Asynchronous Alpine.js components
+
+Sometimes, you may want to load external JavaScript libraries for your Alpine.js-based components. The best way to do this is by storing the compiled JavaScript and Alpine component in a separate file, and letting us load it whenever the component is rendered.
+
+Firstly, you should install [esbuild](https://esbuild.github.io) via NPM, which we will use to create a single JavaScript file containing your external library and Alpine component:
+
+```bash
+npm install esbuild --save-dev
+```
+
+Then, you must create a script to compile your JavaScript and Alpine component. You can put this anywhere, for example `bin/build.js`:
+
+```js
+import * as esbuild from 'esbuild'
+
+const isDev = process.argv.includes('--dev')
+
+async function compile(options) {
+    const context = await esbuild.context(options)
+
+    if (isDev) {
+        await context.watch()
+    } else {
+        await context.rebuild()
+        await context.dispose()
+    }
+}
+
+const defaultOptions = {
+    define: {
+        'process.env.NODE_ENV': isDev ? `'development'` : `'production'`,
+    },
+    bundle: true,
+    mainFields: ['module', 'main'],
+    platform: 'neutral',
+    sourcemap: isDev ? 'inline' : false,
+    sourcesContent: isDev,
+    treeShaking: true,
+    target: ['es2020'],
+    minify: !isDev,
+    plugins: [{
+        name: 'watchPlugin',
+        setup(build) {
+            build.onStart(() => {
+                console.log(`Build started at ${new Date(Date.now()).toLocaleTimeString()}: ${build.initialOptions.outfile}`)
+            })
+
+            build.onEnd((result) => {
+                if (result.errors.length > 0) {
+                    console.log(`Build failed at ${new Date(Date.now()).toLocaleTimeString()}: ${build.initialOptions.outfile}`, result.errors)
+                } else {
+                    console.log(`Build finished at ${new Date(Date.now()).toLocaleTimeString()}: ${build.initialOptions.outfile}`)
+                }
+            })
+        }
+    }],
+}
+
+compile({
+    ...defaultOptions,
+    entryPoints: ['./resources/js/components/test-component.js'],
+    outfile: './resources/js/dist/components/test-component.js',
+})
+```
+
+As you can see at the bottom of the script, we are compiling a file called `resources/js/components/test-component.js` into `resources/js/dist/components/test-component.js`. You can change these paths to suit your needs. You can compile as many components as you want.
+
+Now, create a new file called `resources/js/components/test-component.js`:
+
+```js
+// Import any external JavaScript libraries from NPM here.
+
+export default function testComponent({
+    state,
+}) {
+    return {
+        state,
+
+        // You can define any other Alpine.js properties here.
+
+        init() {
+            // Initialise the Alpine component here, if you need to.
+        },
+
+        // You can define any other Alpine.js functions here.
+    }
+}
+```
+
+Now, you can compile this file into `resources/js/dist/components/test-component.js` by running the following command:
+
+```bash
+node bin/build.js
+```
+
+If you want to watch for changes to this file instead of compiling once, try the following command:
+
+```bash
+node bin/build.js --dev
+```
+
+Now, you need to tell Filament to publish this compiled JavaScript file into the `/public` directory of the Laravel application, so it is accessible to the browser. To do this, you can use the `FilamentAsset::register()` method in the `boot()` method of a service provider, passing in an `AlpineComponent` object:
+
+```php
+use Filament\Support\Assets\AlpineComponent;
+use Filament\Support\Facades\FilamentAsset;
+
+FilamentAsset::register([
+    AlpineComponent::make('test-component', __DIR__ . '/../../resources/js/dist/components/test-component.js'),
+]);
+```
+
+When you run `php artisan filament:assets`, the compiled file will be copied into the `/public` directory.
+
+Finally, you can load this asynchronous Alpine component in your view using `x-load` attributes and the `FilamentAsset::getAlpineComponentSrc()` method:
+
+```blade
+<div
+    x-load
+    x-load-src="{{ \Filament\Support\Facades\FilamentAsset::getAlpineComponentSrc('test-component') }}"
+    x-data="testComponent({
+        state: $wire.{{ $applyStateBindingModifiers("\$entangle('{$statePath}')") }},
+    })"
+>
+    <input x-model="state" />
+</div>
+```
+
+This example is for a [custom form field](../forms/custom-fields). It passes the `state` in as a parameter to the `testComponent()` function, which is entangled with a Livewire component property. You can pass in any parameters you want, and access them in the `testComponent()` function. If you're not using a custom form field, you can ignore the `state` parameter in this example.
+
+The `x-load` attributes come from the [Async Alpine](https://async-alpine.dev/docs/strategies) package, and any features of that package can be used here.
+
+### Registering script data
+
+Sometimes, you may wish to make data from the backend available to JavaScript files. To do this, you can use the `FilamentAsset::registerScriptData()` method in the `boot()` method of a service provider:
+
+```php
+use Filament\Support\Facades\FilamentAsset;
+
+FilamentAsset::registerScriptData([
+    'user' => [
+        'name' => auth()->user()?->name,
+    ],
+]);
+```
+
+Now, you can access that data from any JavaScript file at runtime, using the `window.filamentData` object:
+
+```js
+window.filamentData.user.name // 'Dan Harrin'
+```
+
+### Registering JavaScript files from a URL
+
+If you want to register a JavaScript file from a URL, you may do so. These assets will be loaded on every page as normal, but not copied into the `/public` directory when the `php artisan filament:assets` command is run. This is useful for registering external scripts from a CDN, or scripts that you are already compiling directly into the `/public` directory:
+
+```php
+use Filament\Support\Assets\Js;
+
+FilamentAsset::register([
+    Js::make('example-external-script', 'https://example.com/external.js'),
+    Js::make('example-local-script', asset('js/local.js')),
+]);
+```
+
+--
+title: Enum tricks
+---
+import Aside from "@components/Aside.astro"
+
+## Introduction
+
+Enums are special PHP classes that represent a fixed set of constants. They are useful for modeling concepts that have a limited number of possible values, like days of the week, months in a year, or the suits in a deck of cards.
+
+Since enum "cases" are instances of the enum class, adding interfaces to enums proves to be very useful. Filament provides a collection of interfaces that you can add to enums, which enhance your experience when working with them.
+
+<Aside variant="warning">
+    When using an enum with an attribute on your Eloquent model, please [ensure that it is cast correctly](https://laravel.com/docs/eloquent-mutators#enum-casting).
+</Aside>
+
+## Enum labels
+
+The `HasLabel` interface transforms an enum instance into a textual label. This is useful for displaying human-readable enum values in your UI.
+
+```php
+use Filament\Support\Contracts\HasLabel;
+use Illuminate\Contracts\Support\Htmlable;
+
+enum Status: string implements HasLabel
+{
+    case Draft = 'draft';
+    case Reviewing = 'reviewing';
+    case Published = 'published';
+    case Rejected = 'rejected';
+    
+    public function getLabel(): string | Htmlable | null
+    {
+        return $this->name;
+        
+        // or
+    
+        return match ($this) {
+            self::Draft => 'Draft',
+            self::Reviewing => 'Reviewing',
+            self::Published => 'Published',
+            self::Rejected => 'Rejected',
+        };
+    }
+}
+```
+
+### Using the enum label with form field options
+
+The `HasLabel` interface can be used to generate an array of options from an enum, where the enum's value is the key and the enum's label is the value. This applies to form fields like [`Select`](../forms/select) and [`CheckboxList`](../forms/checkbox-list), as well as the Table Builder's [`SelectColumn`](../tables/columns/select) and [`SelectFilter`](../tables/filters/select):
+
+```php
+use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Radio;
+use Filament\Forms\Components\Select;
+use Filament\Tables\Columns\SelectColumn;
+use Filament\Tables\Filters\SelectFilter;
+
+Select::make('status')
+    ->options(Status::class)
+
+CheckboxList::make('status')
+    ->options(Status::class)
+
+Radio::make('status')
+    ->options(Status::class)
+
+SelectColumn::make('status')
+    ->options(Status::class)
+
+SelectFilter::make('status')
+    ->options(Status::class)
+```
+
+In these examples, `Status::class` is the enum class which implements `HasLabel`, and the options are generated from that:
+
+```php
+[
+    'draft' => 'Draft',
+    'reviewing' => 'Reviewing',
+    'published' => 'Published',
+    'rejected' => 'Rejected',
+]
+```
+
+### Using the enum label with a text column in your table
+
+If you use a [`TextColumn`](../tables/columns/text) with the Table Builder, and it is cast to an enum in your Eloquent model, Filament will automatically use the `HasLabel` interface to display the enum's label instead of its raw value.
+
+### Using the enum label as a group title in your table
+
+If you use a [grouping](../tables/grouping) with the Table Builder, and it is cast to an enum in your Eloquent model, Filament will automatically use the `HasLabel` interface to display the enum's label instead of its raw value. The label will be displayed as the [title of each group](../tables/grouping#setting-a-group-title).
+
+### Using the enum label with a text entry in your infolist
+
+If you use a [`TextEntry`](../infolists/text-entry) in an infolist, and it is cast to an enum in your Eloquent model, Filament will automatically use the `HasLabel` interface to display the enum's label instead of its raw value.
+
+## Enum colors
+
+The `HasColor` interface transforms an enum instance into a [color](../styling/colors). This is useful for displaying colored enum values in your UI.
+
+```php
+use Filament\Support\Contracts\HasColor;
+
+enum Status: string implements HasColor
+{
+    case Draft = 'draft';
+    case Reviewing = 'reviewing';
+    case Published = 'published';
+    case Rejected = 'rejected';
+    
+    public function getColor(): string | array | null
+    {
+        return match ($this) {
+            self::Draft => 'gray',
+            self::Reviewing => 'warning',
+            self::Published => 'success',
+            self::Rejected => 'danger',
+        };
+    }
+}
+```
+
+### Using the enum color with a text column in your table
+
+If you use a [`TextColumn`](../tables/columns/text) with the Table Builder, and it is cast to an enum in your Eloquent model, Filament will automatically use the `HasColor` interface to display the enum label in its color. This works best if you use the [`badge()`](../tables/columns/text#displaying-as-a-badge) method on the column.
+
+### Using the enum color with a text entry in your infolist
+
+If you use a [`TextEntry`](../infolists/text-entry) in an infolist, and it is cast to an enum in your Eloquent model, Filament will automatically use the `HasColor` interface to display the enum label in its color. This works best if you use the [`badge()`](../infolists/text-entry#displaying-as-a-badge) method on the entry.
+
+### Using the enum color with a toggle buttons field in your form
+
+If you use a [`ToggleButtons`](../forms/toggle-buttons) form field, and it is set to use an enum for its options, Filament will automatically use the `HasColor` interface to display the enum label in its color.
+
+## Enum icons
+
+The `HasIcon` interface transforms an enum instance into an [icon](../styling/icons). This is useful for displaying icons alongside enum values in your UI.
+
+```php
+use BackedEnum;
+use Filament\Support\Contracts\HasIcon;
+use Filament\Support\Icons\Heroicon;
+use Illuminate\Contracts\Support\Htmlable;
+
+enum Status: string implements HasIcon
+{
+    case Draft = 'draft';
+    case Reviewing = 'reviewing';
+    case Published = 'published';
+    case Rejected = 'rejected';
+
+    public function getIcon(): string | BackedEnum | Htmlable | null
+    {
+        return match ($this) {
+            self::Draft => Heroicon::Pencil,
+            self::Reviewing => Heroicon::Eye,
+            self::Published => Heroicon::Check,
+            self::Rejected => Heroicon::XMark,
+        };
+    }
+}
+```
+
+### Using the enum icon with a text column in your table
+
+If you use a [`TextColumn`](../tables/columns/text) with the Table Builder, and it is cast to an enum in your Eloquent model, Filament will automatically use the `HasIcon` interface to display the enum's icon aside its label. This works best if you use the [`badge()`](../tables/columns/text#displaying-as-a-badge) method on the column.
+
+### Using the enum icon with a text entry in your infolist
+
+If you use a [`TextEntry`](../infolists/text-entry) in an infolist, and it is cast to an enum in your Eloquent model, Filament will automatically use the `HasIcon` interface to display the enum's icon aside its label. This works best if you use the [`badge()`](../infolists/text-entry#displaying-as-a-badge) method on the entry.
+
+### Using the enum icon with a toggle buttons field in your form
+
+If you use a [`ToggleButtons`](../forms/toggle-buttons) form field, and it is set to use an enum for its options, Filament will automatically use the `HasIcon` interface to display the enum's icon aside its label.
+
+## Enum descriptions
+
+The `HasDescription` interface transforms an enum instance into a textual description, often displayed under its [label](#enum-labels). This is useful for displaying human-friendly descriptions in your UI.
+
+```php
+use Filament\Support\Contracts\HasDescription;
+use Filament\Support\Contracts\HasLabel;
+use Illuminate\Contracts\Support\Htmlable;
+
+enum Status: string implements HasLabel, HasDescription
+{
+    case Draft = 'draft';
+    case Reviewing = 'reviewing';
+    case Published = 'published';
+    case Rejected = 'rejected';
+    
+    public function getLabel(): string | Htmlable | null
+    {
+        return $this->name;
+    }
+    
+    public function getDescription(): string | Htmlable | null
+    {
+        return match ($this) {
+            self::Draft => 'This has not finished being written yet.',
+            self::Reviewing => 'This is ready for a staff member to read.',
+            self::Published => 'This has been approved by a staff member and is public on the website.',
+            self::Rejected => 'A staff member has decided this is not appropriate for the website.',
+        };
+    }
+}
+```
+
+### Using the enum description with form field descriptions
+
+The `HasDescription` interface can be used to generate an array of descriptions from an enum, where the enum's value is the key and the enum's description is the value. This applies to form fields like [`Radio`](../forms/radio#setting-option-descriptions) and [`CheckboxList`](../forms/checkbox-list#setting-option-descriptions):
+
+```php
+use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Radio;
+
+Radio::make('status')
+    ->options(Status::class)
+
+CheckboxList::make('status')
+    ->options(Status::class)
+```
+
+
+
+---
+title: File generation
+---
+
+## Introduction
+
+Filament includes many CLI commands which generate files. This guide is to explain how you can customize the generated files.
+
+The vast majority of files that Filament generates are PHP classes. Filament uses [`nette/php-generator`](https://github.com/nette/php-generator) to generate classes programmatically, instead of using template files. The advantage of this is that there is much more flexibility in the generated files, which is important when you need to support as many different configuration options as Filament has.
+
+Each type of class is generated by a `ClassGenerator` class. Here are a list of `ClassGenerator` classes that Filament uses:
+
+- `Filament\Actions\Commands\FileGenerators\ExporterClassGenerator` is used by the `make:filament-exporter` command.
+- `Filament\Actions\Commands\FileGenerators\ImporterClassGenerator` is used by the `make:filament-importer` command.
+- `Filament\Forms\Commands\FileGenerators\FieldClassGenerator` is used by the `make:filament-form-field` command.
+- `Filament\Forms\Commands\FileGenerators\FormSchemaClassGenerator` is used by the `make:filament-form` command.
+- `Filament\Forms\Commands\FileGenerators\LivewireFormComponentClassGenerator` is used by the `make:filament-livewire-form` command.
+- `Filament\Infolists\Commands\FileGenerators\EntryClassGenerator` is used by the `make:filament-infolist-entry` command.
+- `Filament\Commands\FileGenerators\Resources\Pages\ResourceCreateRecordPageClassGenerator` is used by the `make:filament-resource` and `make:filament-page` commands.
+- `Filament\Commands\FileGenerators\Resources\Pages\ResourceCustomPageClassGenerator` is used by the `make:filament-resource` and `make:filament-page` commands.
+- `Filament\Commands\FileGenerators\Resources\Pages\ResourceEditRecordPageClassGenerator` is used by the `make:filament-resource` and `make:filament-page` commands.
+- `Filament\Commands\FileGenerators\Resources\Pages\ResourceListRecordsPageClassGenerator` is used by the `make:filament-resource` and `make:filament-page` commands.
+- `Filament\Commands\FileGenerators\Resources\Pages\ResourceManageRecordsPageClassGenerator` is used by the `make:filament-resource` and `make:filament-page` commands.
+- `Filament\Commands\FileGenerators\Resources\Pages\ResourceManageRelatedRecordsPageClassGenerator` is used by the `make:filament-resource` and `make:filament-page` commands.
+- `Filament\Commands\FileGenerators\Resources\Pages\ResourceViewRecordPageClassGenerator` is used by the `make:filament-resource` and `make:filament-page` commands.
+- `Filament\Commands\FileGenerators\Resources\SchemasResourceFormSchemaClassGenerator` is used by the `make:filament-resource` command.
+- `Filament\Commands\FileGenerators\Resources\SchemasResourceInfolistSchemaClassGenerator` is used by the `make:filament-resource` command.
+- `Filament\Commands\FileGenerators\Resources\SchemasResourceTableClassGenerator` is used by the `make:filament-resource` command.
+- `Filament\Commands\FileGenerators\Resources\RelationManagerClassGenerator` is used by the `make:filament-relation-manager` command.
+- `Filament\Commands\FileGenerators\Resources\ResourceClassGenerator` is used by the `make:filament-resource` command.
+- `Filament\Commands\FileGenerators\ClusterClassGenerator` is used by the `make:filament-cluster` command.
+- `Filament\Commands\FileGenerators\CustomPageClassGenerator` is used by the `make:filament-page` command.
+- `Filament\Commands\FileGenerators\PanelProviderClassGenerator` is used by the `filament:install` and `make:filament-panel` commands.
+- `Filament\Schemas\Commands\FileGenerators\ComponentClassGenerator` is used by the `make:filament-schema-component` command.
+- `Filament\Schemas\Commands\FileGenerators\LivewireSchemaComponentClassGenerator` is used by the `make:filament-livewire-schema` command.
+- `Filament\Schemas\Commands\FileGenerators\SchemaClassGenerator` is used by the `make:filament-schema` command.
+- `Filament\Tables\Commands\FileGenerators\ColumnClassGenerator` is used by the `make:filament-table-column` command.
+- `Filament\Tables\Commands\FileGenerators\LivewireTableComponentClassGenerator` is used by the `make:filament-livewire-table` command.
+- `Filament\Tables\Commands\FileGenerators\TableClassGenerator` is used by the `make:filament-table` command.
+- `Filament\Widgets\Commands\FileGenerators\ChartWidgetClassGenerator` is used by the `make:filament-widget` command.
+- `Filament\Widgets\Commands\FileGenerators\CustomWidgetClassGenerator` is used by the `make:filament-widget` command.
+- `Filament\Widgets\Commands\FileGenerators\StatsOverviewWidgetClassGenerator` is used by the `make:filament-widget` command.
+- `Filament\Widgets\Commands\FileGenerators\TableWidgetClassGenerator` is used by the `make:filament-widget` command.
+
+## The anatomy of a class generator
+
+The best way to learn about class generators is to look at their source code. They all follow very similar patterns, and use the features from [`nette/php-generator`](https://github.com/nette/php-generator).
+
+Here are some methods to look out for:
+
+- `__construct()` accepts the parameters that are passed into the generator. This is all the information you have access to as context for generating the class.
+- `getImports()` returns the imports that are used in the class being generated. This is not an exclusive list, and imports can be added while generating properties and methods as well, if that is easier than providing them in advance.
+- `getExtends()` returns the fully qualified name of the class being extended.
+- `addTraitsToClass()` is used to add traits to the class being generated. The `Class` object from `nette/php-generator` is passed in as a parameter.
+- `addPropertiesToClass()` is used to add properties to the class being generated. The `Class` object from `nette/php-generator` is passed in as a parameter.
+- `add*PropertyToClass()` methods are used to add a single property to the class being generated. The `Class` object from `nette/php-generator` is passed in as a parameter. They are usually called from `addPropertiesToClass()`.
+- `addMethodsToClass()` is used to add methods to the class being generated. The `Class` object from `nette/php-generator` is passed in as a parameter.
+- `add*MethodToClass()` methods are used to add a single method to the class being generated. The `Class` object from `nette/php-generator` is passed in as a parameter. They are usually called from `addMethodsToClass()`.
+
+## Replacing a class generator
+
+To be able to make changes to how a file is generated, you need to identify the correct class generator (see the list above) and replace it.
+
+To replace it, create a new class that extends the class generator you want to replace. For example, if you want to replace the `ResourceClassGenerator`, create a new class like this:
+
+```php
+namespace App\Filament\Commands\FileGenerators\Resources;
+
+use Filament\Commands\FileGenerators\Resources\ResourceClassGenerator as BaseResourceClassGenerator;
+
+class ResourceClassGenerator extends BaseResourceClassGenerator
+{
+   // ...
+}
+```
+
+You also need to register it as a binding in the service container. You can do this in a service provider such as `AppServiceProvider`:
+
+```php
+use App\Filament\Commands\FileGenerators\Resources\ResourceClassGenerator;
+use Filament\Commands\FileGenerators\Resources\ResourceClassGenerator as BaseResourceClassGenerator;
+use Illuminate\Support\ServiceProvider;
+
+class AppServiceProvider extends ServiceProvider
+{
+    public function register()
+    {
+        // ...
+    
+        $this->app->bind(BaseResourceClassGenerator::class, ResourceClassGenerator::class);
+        
+        // ...
+    }
+}
+```
+
+## Customizing an existing property or method in a class
+
+While viewing the source code of the class generator, locate the property or method you want to customize. You can override it in your class generator by simply defining a new method with the same name. For example, here is a method you can find for adding the `$navigationIcon` property to a resource class:
+
+```php
+use BackedEnum;
+use Filament\Support\Icons\Heroicon;
+use Nette\PhpGenerator\ClassType;
+use Nette\PhpGenerator\Literal;
+
+protected function addNavigationIconPropertyToClass(ClassType $class): void
+{
+    $this->namespace->addUse(BackedEnum::class);
+    $this->namespace->addUse(Heroicon::class);
+
+    $property = $class->addProperty('navigationIcon', new Literal('Heroicon::OutlinedRectangleStack'))
+        ->setProtected()
+        ->setStatic()
+        ->setType('string|BackedEnum|null');
+    $this->configureNavigationIconProperty($property);
+}
+```
+
+You could override that method to change its behavior, or you could just override the `configureNavigationIconProperty()` method to hook into how the property is configured. For example, make the property `public` instead of `protected`:
+
+```php
+use Nette\PhpGenerator\Property;
+
+protected function configureNavigationIconProperty(Property $property): void
+{
+    $property->setPublic();
+}
+```
+
+## Adding a new property or method to a class
+
+To add a new property or method to a class, you can do this in the `addPropertiesToClass()` or `addMethodsToClass()` methods. To inherit the existing properties instead of replacing them, make sure you call `parent::addPropertiesToClass()` or `parent::addMethodsToClass()` at the start of your method. For example, here is how to add a new property to a resource class:
+
+```php
+use Nette\PhpGenerator\ClassType;
+use Nette\PhpGenerator\Literal;
+
+protected function addPropertiesToClass(ClassType $class): void
+{
+    parent::addPropertiesToClass($class);
+
+    $class->addProperty('navigationSort', 10)
+        ->setProtected()
+        ->setStatic()
+        ->setType('?int');
+}
+```
+
+
+---
+title: Modular architecture (DDD)
+---
+import Aside from "@components/Aside.astro"
+
+## Introduction
+
+When building large-scale applications with Filament, you may want to organize your code using Domain-Driven Design (DDD) principles, splitting your application into self-contained modules. This guide explains how to integrate Filament with modular architecture packages like [InterNACHI/Modular](https://github.com/InterNACHI/modular).
+
+## The modular approach
+
+In a modular architecture, each domain of your application is structured as a separate Composer package, typically located in an `app-modules/` directory. Each module contains its own:
+
+- Models and business logic
+- Filament resources, pages, and widgets
+- Service provider
+- Routes, views, and configurations
+- Tests
+
+This approach offers several benefits:
+
+- Clear separation of concerns between domains
+- Easier team collaboration (different teams can own different modules)
+- Better testability and maintainability
+- Ability to reuse modules across projects
+
+## Setting up InterNACHI/Modular
+
+First, install the modular package:
+
+```bash
+composer require internachi/modular
+```
+
+Create a new module:
+
+```bash
+php artisan make:module alerts
+```
+
+This scaffolds a module structure:
+
+```
+.
++-- app-modules
+|   +-- alerts
+|   |   +-- composer.json
+|   |   +-- src
+|   |   |   +-- Providers
+|   |   |   |   +-- AlertsServiceProvider.php
+|   |   +-- routes
+|   |   +-- resources
+|   |   +-- database
+|   |   +-- tests
+```
+
+### Configuring the module's composer.json
+
+Each module should require `filament/filament` and define its service provider:
+
+```json
+{
+    "name": "my-app/alerts",
+    "type": "library",
+    "require": {
+        "filament/filament": "^5.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Alerts\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Modules\\Alerts\\Providers\\AlertsServiceProvider"
+            ]
+        }
+    }
+}
+```
+
+## Creating a Filament plugin for your module
+
+Each module should define its own Filament plugin that registers its resources, pages, and widgets:
+
+```php
+namespace Modules\Alerts;
+
+use Filament\Contracts\Plugin;
+use Filament\Panel;
+
+class AlertsPlugin implements Plugin
+{
+    public function getId(): string
+    {
+        return 'alerts';
+    }
+
+    public static function make(): static
+    {
+        return app(static::class);
+    }
+
+    public function register(Panel $panel): void
+    {
+        $panel
+            ->discoverResources(
+                in: __DIR__ . '/Filament/Resources',
+                for: 'Modules\\Alerts\\Filament\\Resources',
+            )
+            ->discoverPages(
+                in: __DIR__ . '/Filament/Pages',
+                for: 'Modules\\Alerts\\Filament\\Pages',
+            )
+            ->discoverWidgets(
+                in: __DIR__ . '/Filament/Widgets',
+                for: 'Modules\\Alerts\\Filament\\Widgets',
+            );
+    }
+
+    public function boot(Panel $panel): void
+    {
+        //
+    }
+}
+```
+
+## Registering plugins conditionally for specific panels
+
+When you have multiple panels (e.g., `admin`, `app`, `portal`), you'll often want certain modules to only register their plugins for specific panels. Use `Panel::configureUsing()` in your module's service provider to conditionally register plugins.
+
+### Basic conditional registration
+
+To register a plugin for all panels except one:
+
+```php
+namespace Modules\Alerts\Providers;
+
+use Filament\Panel;
+use Illuminate\Support\ServiceProvider;
+use Modules\Alerts\AlertsPlugin;
+
+class AlertsServiceProvider extends ServiceProvider
+{
+    public function register(): void
+    {
+        Panel::configureUsing(function (Panel $panel): void {
+            if ($panel->getId() !== 'admin') {
+                return;
+            }
+
+            $panel->plugin(AlertsPlugin::make());
+        });
+    }
+}
+```
+
+### Using a match statement for multiple panels
+
+When you need to register a plugin for specific panels or configure it differently per panel, use a `match` statement that calls `$panel->plugin()` directly:
+
+```php
+namespace Modules\Alerts\Providers;
+
+use Filament\Panel;
+use Illuminate\Support\ServiceProvider;
+use Modules\Alerts\AlertsPlugin;
+
+class AlertsServiceProvider extends ServiceProvider
+{
+    public function register(): void
+    {
+        Panel::configureUsing(function (Panel $panel): void {
+            match ($panel->getId()) {
+                'admin' => $panel->plugin(
+                    AlertsPlugin::make()->enableAdminFeatures(),
+                ),
+                'staff' => $panel->plugin(
+                    AlertsPlugin::make(),
+                ),
+                default => null,
+            };
+        });
+    }
+}
+```
+
+This approach lets you configure each plugin instance differently based on the panel, while panels not matched in the statement simply don't receive the plugin.
+
+## Module directory structure
+
+A well-organized module with Filament integration might look like this:
+
+```
+.
++-- app-modules
+|   +-- alerts
+|   |   +-- composer.json
+|   |   +-- config
+|   |   |   +-- alerts.php
+|   |   +-- database
+|   |   |   +-- factories
+|   |   |   +-- migrations
+|   |   |   +-- seeders
+|   |   +-- resources
+|   |   |   +-- views
+|   |   |   |   +-- filament
+|   |   |   |   |   +-- pages
+|   |   +-- routes
+|   |   |   +-- web.php
+|   |   +-- src
+|   |   |   +-- AlertsPlugin.php
+|   |   |   +-- Filament
+|   |   |   |   +-- Pages
+|   |   |   |   +-- Resources
+|   |   |   |   |   +-- Alerts
+|   |   |   |   |   |   +-- AlertResource.php
+|   |   |   |   |   |   +-- Pages
+|   |   |   |   |   |   |   +-- CreateAlert.php
+|   |   |   |   |   |   |   +-- EditAlert.php
+|   |   |   |   |   |   |   +-- ListAlerts.php
+|   |   |   |   +-- Widgets
+|   |   |   +-- Models
+|   |   |   |   +-- Alert.php
+|   |   |   +-- Providers
+|   |   |   |   +-- AlertsServiceProvider.php
+|   |   +-- tests
+```
+
+## Sharing resources between panels
+
+Sometimes you may want a resource to appear in multiple panels with different configurations. You can achieve this by using resource discovery with panel-specific customizations:
+
+```php
+namespace Modules\Users;
+
+use Filament\Contracts\Plugin;
+use Filament\Panel;
+use Modules\Users\Filament\Resources\UserResource;
+
+class UsersPlugin implements Plugin
+{
+    protected bool $canManageRoles = false;
+
+    public function getId(): string
+    {
+        return 'users';
+    }
+
+    public static function make(): static
+    {
+        return app(static::class);
+    }
+
+    public function canManageRoles(bool $condition = true): static
+    {
+        $this->canManageRoles = $condition;
+
+        return $this;
+    }
+
+    public function hasRoleManagement(): bool
+    {
+        return $this->canManageRoles;
+    }
+
+    public function register(Panel $panel): void
+    {
+        $panel->resources([
+            UserResource::class,
+        ]);
+    }
+
+    public function boot(Panel $panel): void
+    {
+        //
+    }
+}
+```
+
+Then register with different capabilities:
+
+```php
+Panel::configureUsing(function (Panel $panel): void {
+    match ($panel->getId()) {
+        'admin' => $panel->plugin(
+            UsersPlugin::make()->canManageRoles(),
+        ),
+        'staff' => $panel->plugin(
+            UsersPlugin::make(),
+        ),
+        default => null,
+    };
+});
+```
+
+<Aside variant="info">
+    The `Panel::configureUsing()` approach is powerful because it allows modules to configure themselves without requiring changes to your panel provider files. When you add or remove a module, its Filament integration is automatically handled.
+</Aside>
+
+## Registering Livewire components from modules
+
+If your module contains custom Livewire components used by Filament (such as custom pages or widgets), you can register them in the plugin's `boot()` method:
+
+```php
+use Livewire\Livewire;
+use Modules\Alerts\Filament\Pages\AlertsDashboard;
+
+public function boot(Panel $panel): void
+{
+    Livewire::component('alerts-dashboard', AlertsDashboard::class);
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+

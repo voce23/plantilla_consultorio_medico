@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>11.4 Props opcionales con isset() en Blade</title>
+    <link rel="stylesheet" href="../micss/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+</head>
+<body>
+<div class="leccion-contenedor">
+
+    <div class="leccion-header">
+        <span class="leccion-badge">Lección 11.4</span>
+        <h1>Props opcionales con isset() en componentes Blade</h1>
+        <p class="leccion-descripcion">Cómo pasar variables al layout sin que explote cuando la página no las define</p>
+    </div>
+
+    <!-- ANALOGIA -->
+    <div class="bloque-analogia">
+        <h2>📦 La analogía del formulario</h2>
+        <p>Imagina un formulario con un campo "apodo" que es <em>opcional</em>. Si la persona no lo llena, el sistema no debería decir "ERROR: apodo no encontrado" — debería simplemente poner un valor por defecto o dejarlo vacío.</p>
+        <p>Con las variables en Blade layouts pasa lo mismo: si la vista no define <code>$pageTitle</code>, el layout no debería explotar. <strong>isset() es la forma de preguntar "¿existe esta variable antes de usarla?"</strong></p>
+    </div>
+
+    <!-- EL PROBLEMA -->
+    <div class="bloque-error">
+        <h2>🔴 El error que teníamos</h2>
+        <div style="background: #1e1e1e; color: #f8f8f2; padding: 1rem; border-radius: 0.5rem; font-family: monospace; font-size: 0.875rem;">
+            <div style="color: #ff6b6b;">ErrorException</div>
+            <div>Undefined variable $pageTitle</div>
+        </div>
+        <p style="margin-top: 1rem;">Esto pasaba porque en <code>app.blade.php</code> teníamos:</p>
+        <pre style="background: #1e1e1e; color: #fca5a5; padding: 0.75rem; border-radius: 0.5rem; overflow-x: auto;"><code>&lt;x-seo-meta title="{{ $pageTitle ?? 'Inicio' }}" /&gt;</code></pre>
+        <p>El problema: las dobles llaves <code>{{ }}</code> evalúan la expresión PHP <em>antes</em> de pasarla. Si <code>$pageTitle</code> no existe como slot de Blade, PHP lanza el error antes de poder aplicar el <code>??</code>.</p>
+    </div>
+
+    <!-- MICRO-CODIGO -->
+    <div class="bloque-codigo">
+        <div class="codigo-header">
+            <span class="codigo-archivo">📄 resources/views/layouts/app.blade.php — la corrección</span>
+        </div>
+        <pre><code class="language-html">&lt;!-- ❌ ROTO: {{ }} evalúa antes de que Blade sepa si el slot existe --&gt;
+&lt;x-seo-meta title="{{ $pageTitle ?? 'Inicio' }}" /&gt;
+
+&lt;!-- ✅ CORRECTO: el : vincula directamente PHP con isset() seguro --&gt;
+&lt;x-seo-meta
+    :title="isset($pageTitle) ? (string)$pageTitle : 'Clínica Médica'"
+    :description="isset($pageDescription) ? (string)$pageDescription : 'Atención médica especializada'"
+/&gt;</code></pre>
+    </div>
+
+    <!-- LINEA A LINEA -->
+    <div class="bloque-explicacion">
+        <h2>🔬 Línea por línea</h2>
+        <table class="tabla-explicacion">
+            <thead><tr><th>Código</th><th>¿Qué hace?</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><code>:title="..."</code></td>
+                    <td>El <code>:</code> delante del atributo significa "evalúa esto como PHP", no como texto</td>
+                </tr>
+                <tr>
+                    <td><code>isset($pageTitle)</code></td>
+                    <td>Pregunta: "¿existe esta variable Y tiene un valor?" — si no existe, devuelve false sin error</td>
+                </tr>
+                <tr>
+                    <td><code>? (string)$pageTitle</code></td>
+                    <td>Si existe, úsala y conviértela a string explícitamente</td>
+                </tr>
+                <tr>
+                    <td><code>: 'Clínica Médica'</code></td>
+                    <td>Si NO existe, usa este valor por defecto</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- DIFERENCIA {{ }} vs : -->
+    <div class="bloque-nota">
+        <h2>⚠️ Diferencia entre {{ }} y : en atributos Blade</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+            <div style="background: #fef2f2; padding: 1rem; border-radius: 0.5rem; border: 2px solid #fca5a5;">
+                <h4 style="color: #dc2626;">title="{{ $var }}"</h4>
+                <p style="font-size: 0.875rem;">Evalúa <code>$var</code> inmediatamente como PHP dentro de comillas. Si $var no existe → error fatal antes de que puedas manejarlo.</p>
+            </div>
+            <div style="background: #f0fdf4; padding: 1rem; border-radius: 0.5rem; border: 2px solid #86efac;">
+                <h4 style="color: #16a34a;">:title="expr PHP"</h4>
+                <p style="font-size: 0.875rem;">Evalúa la expresión PHP completa. Puedes usar <code>isset()</code>, operadores ternarios y cualquier lógica sin que cause error.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMO SE PASA EL SLOT DESDE LA VISTA -->
+    <div class="bloque-pasos">
+        <h2>🛠️ Cómo pasa una vista su título al layout</h2>
+        <div class="bloque-codigo">
+            <div class="codigo-header">
+                <span class="codigo-archivo">📄 resources/views/paginas/nosotros.blade.php</span>
+            </div>
+            <pre><code class="language-html">&lt;x-app-layout&gt;
+    &lt;!-- Slot nombrado: el layout lo recibe como $pageTitle --&gt;
+    &lt;x-slot name="pageTitle"&gt;Quiénes Somos — Clínica Médica&lt;/x-slot&gt;
+    &lt;x-slot name="pageDescription"&gt;Conoce al equipo médico especializado que nos respalda.&lt;/x-slot&gt;
+
+    &lt;div class="py-16 px-4"&gt;
+        &lt;h1&gt;Nosotros&lt;/h1&gt;
+    &lt;/div&gt;
+&lt;/x-app-layout&gt;</code></pre>
+        </div>
+
+        <div class="bloque-codigo">
+            <div class="codigo-header">
+                <span class="codigo-archivo">📄 resources/views/paginas/servicios.blade.php (sin definir el slot)</span>
+            </div>
+            <pre><code class="language-html">&lt;x-app-layout&gt;
+    &lt;!-- Esta vista NO define pageTitle — el layout usa el valor por defecto --&gt;
+    &lt;div class="py-16 px-4"&gt;
+        &lt;h1&gt;Servicios&lt;/h1&gt;
+    &lt;/div&gt;
+&lt;/x-app-layout&gt;</code></pre>
+        </div>
+        <p>En el segundo caso, como <code>$pageTitle</code> no existe, el <code>isset()</code> devuelve <code>false</code> y el layout muestra "Clínica Médica" como título por defecto — sin ningún error.</p>
+    </div>
+
+    <!-- RESUMEN -->
+    <div class="bloque-resumen">
+        <h2>📋 Resumen</h2>
+        <ul class="resumen-lista">
+            <li>Los slots nombrados (<code>x-slot name="..."</code>) llegan al layout como variables PHP</li>
+            <li>Dentro de <code>{{ }}</code>, si la variable no existe → error. Usar <code>:</code> + <code>isset()</code> es la forma segura</li>
+            <li>La sintaxis <code>:atributo="expr"</code> en Blade = "evalúa esta expresión PHP como valor del atributo"</li>
+            <li>Las vistas que no necesiten un título personalizado simplemente no definen el slot</li>
+        </ul>
+    </div>
+
+    <div class="leccion-nav">
+        <a href="leccion-11-3-json-ld-blade.html" class="btn-nav btn-atras">← Anterior: JSON-LD</a>
+        <a href="leccion-11-5-nav-links-rutas-reales.html" class="btn-nav btn-siguiente">Siguiente: Nav-links con rutas reales →</a>
+    </div>
+
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+</body>
+</html>
