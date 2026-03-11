@@ -150,12 +150,10 @@
                 @else
                 <!-- Login/Register Links for Guests -->
                 <div class="flex items-center space-x-3">
-                    <a href="{{ route('login') }}" class="text-sm text-gray-600 transition hover:text-medico-azul-600">
+                    <a href="/admin/login" class="text-sm text-gray-600 transition hover:text-medico-azul-600">
                         Iniciar Sesión
                     </a>
-                    <a href="{{ route('register') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white transition rounded-lg bg-medico-azul-500 hover:bg-medico-azul-600">
-                        Registrarse
-                    </a>
+
                 </div>
                 @endauth
             </div>
@@ -275,12 +273,10 @@
         <!-- Guest Links Mobile -->
         <div class="pt-4 pb-1 border-t border-gray-200">
             <div class="mt-3 space-y-1">
-                <x-responsive-nav-link href="{{ route('login') }}">
+                <x-responsive-nav-link href="/admin/login">
                     Iniciar Sesión
                 </x-responsive-nav-link>
-                <x-responsive-nav-link href="{{ route('register') }}">
-                    Registrarse
-                </x-responsive-nav-link>
+
             </div>
         </div>
         @endauth

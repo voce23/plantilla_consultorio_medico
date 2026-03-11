@@ -99,26 +99,13 @@
                     
                     <!-- Imagen principal -->
                     <div class="relative overflow-hidden shadow-2xl bg-gradient-to-br from-medico-azul-100 to-medico-verde-100 rounded-3xl">
-                        @php $heroImg = public_path('images/doctor-principal.jpg'); @endphp
-                        @if(file_exists($heroImg))
-                            {{-- Imagen real --}}
-                            <div class="aspect-[4/5] sm:aspect-square lg:aspect-[4/5]">
-                                <img src="{{ asset('images/doctor-principal.jpg') }}"
-                                     alt="Doctor Principal"
-                                     class="object-cover object-top w-full h-full">
-                            </div>
-                        @else
-                            {{-- Placeholder mientras no hay imagen --}}
-                            <div class="aspect-[4/5] sm:aspect-square lg:aspect-[4/5] flex items-center justify-center bg-gradient-to-br from-medico-azul-200 to-medico-verde-200">
-                                <div class="p-8 text-center">
-                                    <svg class="w-32 h-32 mx-auto text-white opacity-80" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/>
-                                    </svg>
-                                    <p class="mt-4 font-medium text-white">Doctor(a) Principal</p>
-                                    <p class="text-sm text-white/70">Coloca tu imagen en public/images/doctor-principal.jpg</p>
-                                </div>
-                            </div>
-                        @endif
+                        {{-- Imagen del doctor principal --}}
+                        <div class="aspect-[4/5] sm:aspect-square lg:aspect-[4/5]">
+                            <img src="{{ asset('images/doctor-principal.jpg') }}"
+                                 alt="Doctor Principal"
+                                 class="object-cover object-top w-full h-full"
+                                 onerror="this.parentElement.innerHTML='<div class=&quot;w-full h-full flex items-center justify-center bg-gradient-to-br from-medico-azul-200 to-medico-verde-200&quot;><svg class=&quot;w-32 h-32 text-white opacity-80&quot; fill=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;><path d=&quot;M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z&quot;/></svg></div>'">
+                        </div>
                     </div>
 
                     <!-- Card flotante: Horario -->

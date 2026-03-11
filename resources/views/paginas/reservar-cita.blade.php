@@ -55,29 +55,30 @@ $horarios = [
 
             <div class="bg-white rounded-2xl shadow-sm p-8 lg:p-10">
 
-                {{-- Pasos visuales --}}
-                <div class="flex items-center justify-center gap-2 mb-10">
+                {{-- Pasos clickeables --}}
+                <div class="flex items-center justify-center gap-2 mb-10" id="stepper">
                     @foreach(['Tus datos', 'Especialidad', 'Fecha y hora', 'Confirmar'] as $i => $paso)
-                        <div class="flex items-center gap-2">
-                            <div class="flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold
-                                {{ $i === 0 ? 'bg-medico-azul-600 text-white' : 'bg-gray-100 text-gray-400' }}">
+                        <button type="button" onclick="goToStep({{ $i }})" class="flex items-center gap-2 group" data-step="{{ $i }}">
+                            <div class="step-circle flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold transition-all duration-200
+                                {{ $i === 0 ? 'bg-medico-azul-600 text-white' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200' }}">
                                 {{ $i + 1 }}
                             </div>
-                            <span class="text-sm {{ $i === 0 ? 'text-medico-azul-600 font-semibold' : 'text-gray-400' }} hidden sm:block">
+                            <span class="step-label text-sm hidden sm:block transition-all duration-200
+                                {{ $i === 0 ? 'text-medico-azul-600 font-semibold' : 'text-gray-400 group-hover:text-gray-600' }}">
                                 {{ $paso }}
                             </span>
-                        </div>
+                        </button>
                         @if($i < 3)
-                            <div class="flex-1 h-px bg-gray-200 max-w-12"></div>
+                            <div class="step-line flex-1 h-px bg-gray-200 max-w-12 transition-all duration-200"></div>
                         @endif
                     @endforeach
                 </div>
 
-                <form action="{{ route('citas.guardar') }}" method="POST" class="space-y-8">
+                <form action="{{ route('citas.guardar') }}" method="POST" id="citaForm" class="space-y-8">
                     @csrf
 
                     {{-- Sección 1: Datos del paciente --}}
-                    <div>
+                    <div class="form-step" data-step="0">
                         <h2 class="text-lg font-bold text-gray-900 font-serif mb-5 flex items-center gap-2">
                             <span class="w-7 h-7 bg-medico-azul-100 text-medico-azul-700 rounded-full flex items-center justify-center text-sm font-bold shrink-0">1</span>
                             Tus datos personales
@@ -118,12 +119,18 @@ $horarios = [
                                 </select>
                             </div>
                         </div>
+                        <div class="mt-8 flex justify-end">
+                            <button type="button" onclick="nextStep()" class="px-6 py-3 bg-medico-azul-600 hover:bg-medico-azul-700 text-white font-semibold rounded-xl transition flex items-center gap-2">
+                                Siguiente
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
 
-                    <hr class="border-gray-100">
-
                     {{-- Sección 2: Especialidad y doctor --}}
-                    <div>
+                    <div class="form-step hidden" data-step="1">
                         <h2 class="text-lg font-bold text-gray-900 font-serif mb-5 flex items-center gap-2">
                             <span class="w-7 h-7 bg-medico-azul-100 text-medico-azul-700 rounded-full flex items-center justify-center text-sm font-bold shrink-0">2</span>
                             Especialidad y médico
@@ -165,12 +172,24 @@ $horarios = [
                                 </select>
                             </div>
                         </div>
+                        <div class="mt-8 flex justify-between">
+                            <button type="button" onclick="prevStep()" class="px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                                </svg>
+                                Anterior
+                            </button>
+                            <button type="button" onclick="nextStep()" class="px-6 py-3 bg-medico-azul-600 hover:bg-medico-azul-700 text-white font-semibold rounded-xl transition flex items-center gap-2">
+                                Siguiente
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
 
-                    <hr class="border-gray-100">
-
                     {{-- Sección 3: Fecha y hora --}}
-                    <div>
+                    <div class="form-step hidden" data-step="2">
                         <h2 class="text-lg font-bold text-gray-900 font-serif mb-5 flex items-center gap-2">
                             <span class="w-7 h-7 bg-medico-azul-100 text-medico-azul-700 rounded-full flex items-center justify-center text-sm font-bold shrink-0">3</span>
                             Fecha y hora preferida
@@ -192,34 +211,177 @@ $horarios = [
                                 </select>
                             </div>
                         </div>
+                        <div class="mt-8 flex justify-between">
+                            <button type="button" onclick="prevStep()" class="px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                                </svg>
+                                Anterior
+                            </button>
+                            <button type="button" onclick="nextStep()" class="px-6 py-3 bg-medico-azul-600 hover:bg-medico-azul-700 text-white font-semibold rounded-xl transition flex items-center gap-2">
+                                Siguiente
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
 
-                    <hr class="border-gray-100">
-
-                    {{-- Sección 4: Motivo --}}
-                    <div>
+                    {{-- Sección 4: Confirmar --}}
+                    <div class="form-step hidden" data-step="3">
                         <h2 class="text-lg font-bold text-gray-900 font-serif mb-5 flex items-center gap-2">
                             <span class="w-7 h-7 bg-medico-azul-100 text-medico-azul-700 rounded-full flex items-center justify-center text-sm font-bold shrink-0">4</span>
-                            Motivo de la consulta
+                            Confirma tu cita
                         </h2>
-                        <textarea name="motivo" rows="4" placeholder="Describe brevemente el motivo de tu consulta..."
-                            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-medico-azul-400 text-gray-800 text-sm resize-none">{{ old('motivo') }}</textarea>
-                    </div>
-
-                    {{-- Botón enviar --}}
-                    <div class="pt-2">
-                        <button type="submit"
-                            class="w-full py-4 bg-medico-azul-600 hover:bg-medico-azul-700 text-white font-semibold rounded-xl transition text-base flex items-center justify-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                            Solicitar cita
-                        </button>
-                        <p class="mt-3 text-center text-xs text-gray-400">
+                        <div class="bg-gray-50 rounded-xl p-6 space-y-4 mb-6">
+                            <div class="flex justify-between border-b border-gray-200 pb-3">
+                                <span class="text-gray-500 text-sm">Paciente</span>
+                                <span class="text-gray-900 font-medium text-sm text-right" id="resumen-nombre">—</span>
+                            </div>
+                            <div class="flex justify-between border-b border-gray-200 pb-3">
+                                <span class="text-gray-500 text-sm">Teléfono</span>
+                                <span class="text-gray-900 font-medium text-sm" id="resumen-telefono">—</span>
+                            </div>
+                            <div class="flex justify-between border-b border-gray-200 pb-3">
+                                <span class="text-gray-500 text-sm">Especialidad</span>
+                                <span class="text-gray-900 font-medium text-sm text-right" id="resumen-especialidad">—</span>
+                            </div>
+                            <div class="flex justify-between border-b border-gray-200 pb-3">
+                                <span class="text-gray-500 text-sm">Médico</span>
+                                <span class="text-gray-900 font-medium text-sm text-right" id="resumen-doctor">Sin preferencia</span>
+                            </div>
+                            <div class="flex justify-between border-b border-gray-200 pb-3">
+                                <span class="text-gray-500 text-sm">Fecha y hora</span>
+                                <span class="text-gray-900 font-medium text-sm" id="resumen-fecha">—</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 text-sm block mb-1">Motivo</span>
+                                <p class="text-gray-900 text-sm bg-white p-3 rounded-lg border border-gray-200" id="resumen-motivo">Sin motivo especificado</p>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Motivo de la consulta (opcional)</label>
+                            <textarea name="motivo" rows="3" placeholder="Describe brevemente el motivo de tu consulta..."
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-medico-azul-400 text-gray-800 text-sm resize-none">{{ old('motivo') }}</textarea>
+                        </div>
+                        <div class="mt-8 flex justify-between">
+                            <button type="button" onclick="prevStep()" class="px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                                </svg>
+                                Anterior
+                            </button>
+                            <button type="submit"
+                                class="px-8 py-4 bg-medico-azul-600 hover:bg-medico-azul-700 text-white font-semibold rounded-xl transition text-base flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                Solicitar cita
+                            </button>
+                        </div>
+                        <p class="mt-4 text-center text-xs text-gray-400">
                             Tu cita quedará en estado <strong>pendiente</strong> hasta que te confirmemos por teléfono o email.
                         </p>
                     </div>
                 </form>
+
+                {{-- JavaScript para el wizard --}}
+                <script>
+                    let currentStep = 0;
+                    const totalSteps = 4;
+
+                    function updateStepper() {
+                        // Actualizar círculos y etiquetas del stepper
+                        document.querySelectorAll('#stepper [data-step]').forEach((btn, index) => {
+                            const circle = btn.querySelector('.step-circle');
+                            const label = btn.querySelector('.step-label');
+
+                            if (index === currentStep) {
+                                circle.className = 'step-circle flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold transition-all duration-200 bg-medico-azul-600 text-white';
+                                label.className = 'step-label text-sm hidden sm:block transition-all duration-200 text-medico-azul-600 font-semibold';
+                            } else if (index < currentStep) {
+                                circle.className = 'step-circle flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold transition-all duration-200 bg-medico-verde-500 text-white cursor-pointer hover:bg-medico-verde-600';
+                                label.className = 'step-label text-sm hidden sm:block transition-all duration-200 text-medico-verde-600 font-medium';
+                            } else {
+                                circle.className = 'step-circle flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold transition-all duration-200 bg-gray-100 text-gray-400 group-hover:bg-gray-200';
+                                label.className = 'step-label text-sm hidden sm:block transition-all duration-200 text-gray-400 group-hover:text-gray-600';
+                            }
+                        });
+
+                        // Actualizar líneas entre pasos
+                        document.querySelectorAll('.step-line').forEach((line, index) => {
+                            if (index < currentStep) {
+                                line.classList.remove('bg-gray-200');
+                                line.classList.add('bg-medico-verde-300');
+                            } else {
+                                line.classList.remove('bg-medico-verde-300');
+                                line.classList.add('bg-gray-200');
+                            }
+                        });
+
+                        // Mostrar/ocultar secciones del formulario
+                        document.querySelectorAll('.form-step').forEach((step, index) => {
+                            if (index === currentStep) {
+                                step.classList.remove('hidden');
+                            } else {
+                                step.classList.add('hidden');
+                            }
+                        });
+
+                        // Actualizar resumen en paso 4
+                        if (currentStep === 3) {
+                            updateResumen();
+                        }
+                    }
+
+                    function goToStep(step) {
+                        if (step >= 0 && step < totalSteps) {
+                            currentStep = step;
+                            updateStepper();
+                        }
+                    }
+
+                    function nextStep() {
+                        if (currentStep < totalSteps - 1) {
+                            currentStep++;
+                            updateStepper();
+                        }
+                    }
+
+                    function prevStep() {
+                        if (currentStep > 0) {
+                            currentStep--;
+                            updateStepper();
+                        }
+                    }
+
+                    function updateResumen() {
+                        const nombre = document.querySelector('input[name="nombre"]')?.value || '';
+                        const apellido = document.querySelector('input[name="apellido"]')?.value || '';
+                        const telefono = document.querySelector('input[name="telefono"]')?.value || '';
+                        const fecha = document.querySelector('input[name="fecha"]')?.value || '';
+                        const hora = document.querySelector('select[name="hora"]')?.value || '';
+                        const motivo = document.querySelector('textarea[name="motivo"]')?.value || '';
+
+                        const especialidadSelect = document.querySelector('select[name="especialidad_id"]');
+                        const especialidad = especialidadSelect?.options[especialidadSelect.selectedIndex]?.text || '—';
+
+                        const doctorSelect = document.querySelector('select[name="doctor_id"]');
+                        const doctor = doctorSelect?.value ? doctorSelect.options[doctorSelect.selectedIndex]?.text : 'Sin preferencia';
+
+                        document.getElementById('resumen-nombre').textContent = nombre + (apellido ? ' ' + apellido : '') || '—';
+                        document.getElementById('resumen-telefono').textContent = telefono || '—';
+                        document.getElementById('resumen-especialidad').textContent = especialidad !== 'Selecciona una especialidad' ? especialidad : '—';
+                        document.getElementById('resumen-doctor').textContent = doctor;
+                        document.getElementById('resumen-fecha').textContent = (fecha && hora) ? fecha + ' a las ' + hora : '—';
+                        document.getElementById('resumen-motivo').textContent = motivo || 'Sin motivo especificado';
+                    }
+
+                    // Inicializar
+                    document.addEventListener('DOMContentLoaded', function() {
+                        updateStepper();
+                    });
+                </script>
             </div>
 
             {{-- Alternativa por teléfono --}}

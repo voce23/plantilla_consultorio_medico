@@ -3,7 +3,24 @@
 use App\Models\Articulo;
 use App\Models\Categoria;
 
-$articulos = Articulo::publicados()->recientes()->paginate(9);
+$busqueda = $busqueda ?? request('q');
+$categoriaFiltro = $categoria ?? null;
+
+$query = Articulo::publicados()->recientes();
+
+if ($busqueda) {
+    $query->where(function($q) use ($busqueda) {
+        $q->where('titulo', 'like', "%{$busqueda}%")
+          ->orWhere('extracto', 'like', "%{$busqueda}%")
+          ->orWhere('contenido', 'like', "%{$busqueda}%");
+    });
+}
+
+if ($categoriaFiltro) {
+    $query->whereHas('categoria', fn($q) => $q->where('slug', $categoriaFiltro));
+}
+
+$articulos = $query->paginate(9);
 $categorias = Categoria::conArticulosPublicados()->ordenadas()->get();
 $recientes = Articulo::publicados()->recientes()->limit(5)->get();
 @endphp
@@ -21,6 +38,12 @@ $recientes = Articulo::publicados()->recientes()->limit(5)->get();
             <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
                 {{-- Columna principal: Artículos --}}
                 <div class="lg:col-span-2">
+                    @if($busqueda)
+                        <div class="mb-6 px-4 py-3 bg-medico-azul-50 border border-medico-azul-100 rounded-xl text-sm text-medico-azul-700">
+                            Resultados para: <strong>"{{ $busqueda }}"</strong> — {{ $articulos->total() }} artículo(s) encontrado(s)
+                            <a href="{{ route('blog.index') }}" class="ml-3 text-medico-azul-500 underline hover:text-medico-azul-700">Limpiar búsqueda</a>
+                        </div>
+                    @endif
                     @if($articulos->count() > 0)
                         <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                             @foreach($articulos as $articulo)
