@@ -11,8 +11,8 @@
 ])
 
 @php
-// Número de teléfono por defecto (debe incluir código de país)
-$numero = $telefono ?? '51999999999';
+// Número de teléfono: prop > .env > fallback
+$numero = $telefono ?? env('WHATSAPP_NUMBER', '51999888777');
 
 // Limpiar el número (quitar espacios, guiones, etc.)
 $numeroLimpio = preg_replace('/[^0-9]/', '', $numero);
