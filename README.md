@@ -48,6 +48,7 @@ en español y con proyectos reales.👉 Visita AulaCursos.net
 📄 Licencia
 MIT License — © 2026 Eusebio Panozo Franco
 Ver el archivo LICENSE para más detalles.
+
 El autor se reserva el derecho de cambiar los términos de licencia
 de versiones futuras de esta plantilla en cualquier momento y sin previo aviso.
 Esta licencia aplica únicamente a la versión actual del repositorio.
